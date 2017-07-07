@@ -1,9 +1,9 @@
-.TH "axibase/atsd:rhel7" "Axibase Corporation" "June 26, 2017"  ""
+.TH "axibase/atsd:16741" "Axibase Corporation" "July 07, 2017"  ""
 
 
 .SH DESCRIPTION
 .PP
-Axibase Time Series Database: store and analyze time series data at scale.
+High-performance database for time-series data with built-in SQL, rule-engine, and visualization.
 
 
 .SH USAGE
@@ -25,8 +25,8 @@ axibase@nurswghbs002 \~]# docker run \\
 >   \-\-publish 8082:8082/udp \\
 >   \-\-env COLLECTOR\_USER\_NAME=data\-agent \\
 >   \-\-env COLLECTOR\_USER\_PASSWORD=Pwd78\_ \\
->   axibase/atsd:rhel7
-Unable to find image 'axibase/atsd:rhel7' locally
+>   axibase/atsd:16741
+Unable to find image 'axibase/atsd:16741' locally
 latest: Pulling from axibase/atsd
 bf5d46315322: Pull complete
 9f13e0ac480c: Pull complete
@@ -37,7 +37,7 @@ ca48528e7708: Pull complete
 de225e971cf6: Pull complete
 6a3419ba188d: Pull complete
 Digest: sha256:f2c2957b1ffc8dbb24501495e98981899d2b018961a7742ff6adfd4f1e176429
-Status: Downloaded newer image for axibase/atsd:rhel7
+Status: Downloaded newer image for axibase/atsd:16741
 14d1f27bf0c139027b5f69009c0c5007d35be92d61b16071dc142fbc75acb36a
 
 .fi
@@ -109,10 +109,8 @@ allbox;
 
 \item 8088 – http
 \item 8443 – https
-\item 8081 – 
-\[la]../api/network#network-api\[ra]
-\item 8082 – 
-\[la]../api/network#udp-datagrams\[ra]
+\item 8081 – TCP network commands
+\item 8082 – UDP network commands
 .SH Port Mappings
 .PP
 Depending on your Docker host network configuration, you may need to change port mappings in case some of the published ports are already taken.
@@ -135,11 +133,11 @@ docker run \\
   \-\-detach \\
   \-\-name=atsd \\
   \-\-restart=always \\
-  \-\-publish 9088:8088 \\
-  \-\-publish 9443:8443 \\
-  \-\-publish 9081:8081 \\
-  \-\-publish 9082:8082/udp \\
-  axibase/atsd:rhel7
+  \-\-publish 8088:8088 \\
+  \-\-publish 8443:8443 \\
+  \-\-publish 8081:8081 \\
+  \-\-publish 8082:8082/udp \\
+  axibase/atsd:16741
 
 .fi
 .RE

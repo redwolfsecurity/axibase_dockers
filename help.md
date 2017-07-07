@@ -1,9 +1,9 @@
-% axibase/atsd:rhel7
+% axibase/atsd:16741
 % Axibase Corporation
-% June 26, 2017
+% July 07, 2017
 
 # DESCRIPTION
-Axibase Time Series Database: store and analyze time series data at scale. 
+High-performance database for time-series data with built-in SQL, rule-engine, and visualization. 
 
 # USAGE
 ## Start Container
@@ -21,8 +21,8 @@ axibase@nurswghbs002 ~]# docker run \
 >   --publish 8082:8082/udp \
 >   --env COLLECTOR_USER_NAME=data-agent \
 >   --env COLLECTOR_USER_PASSWORD=Pwd78_ \
->   axibase/atsd:rhel7
-Unable to find image 'axibase/atsd:rhel7' locally
+>   axibase/atsd:16741
+Unable to find image 'axibase/atsd:16741' locally
 latest: Pulling from axibase/atsd
 bf5d46315322: Pull complete
 9f13e0ac480c: Pull complete
@@ -33,7 +33,7 @@ ca48528e7708: Pull complete
 de225e971cf6: Pull complete
 6a3419ba188d: Pull complete
 Digest: sha256:f2c2957b1ffc8dbb24501495e98981899d2b018961a7742ff6adfd4f1e176429
-Status: Downloaded newer image for axibase/atsd:rhel7
+Status: Downloaded newer image for axibase/atsd:16741
 14d1f27bf0c139027b5f69009c0c5007d35be92d61b16071dc142fbc75acb36a
 ```
 
@@ -83,8 +83,8 @@ ATSD web interface is accessible on port 8088/http and 8443/https.
 
 * 8088 – http
 * 8443 – https
-* 8081 – [TCP network commands](../api/network#network-api)
-* 8082 – [UDP network commands](../api/network#udp-datagrams)
+* 8081 – TCP network commands
+* 8082 – UDP network commands
 
 ## Port Mappings
 
@@ -100,9 +100,9 @@ docker run \
   --detach \
   --name=atsd \
   --restart=always \
-  --publish 9088:8088 \
-  --publish 9443:8443 \
-  --publish 9081:8081 \
-  --publish 9082:8082/udp \
-  axibase/atsd:rhel7
+  --publish 8088:8088 \
+  --publish 8443:8443 \
+  --publish 8081:8081 \
+  --publish 8082:8082/udp \
+  axibase/atsd:16741
 ```
