@@ -1,6 +1,6 @@
-% axibase/atsd:16741
+% axibase/atsd:16747
 % Axibase Corporation
-% July 07, 2017
+% July 10, 2017
 
 # DESCRIPTION
 High-performance database for time-series data with built-in SQL, rule-engine, and visualization. 
@@ -21,8 +21,8 @@ axibase@nurswghbs002 ~]# docker run \
 >   --publish 8082:8082/udp \
 >   --env COLLECTOR_USER_NAME=data-agent \
 >   --env COLLECTOR_USER_PASSWORD=Pwd78_ \
->   axibase/atsd:16741
-Unable to find image 'axibase/atsd:16741' locally
+>   axibase/atsd:16747
+Unable to find image 'axibase/atsd:16747' locally
 latest: Pulling from axibase/atsd
 bf5d46315322: Pull complete
 9f13e0ac480c: Pull complete
@@ -33,7 +33,7 @@ ca48528e7708: Pull complete
 de225e971cf6: Pull complete
 6a3419ba188d: Pull complete
 Digest: sha256:f2c2957b1ffc8dbb24501495e98981899d2b018961a7742ff6adfd4f1e176429
-Status: Downloaded newer image for axibase/atsd:16741
+Status: Downloaded newer image for axibase/atsd:16747
 14d1f27bf0c139027b5f69009c0c5007d35be92d61b16071dc142fbc75acb36a
 ```
 
@@ -104,5 +104,5 @@ docker run \
   --publish 8443:8443 \
   --publish 8081:8081 \
   --publish 8082:8082/udp \
-  axibase/atsd:16741
+  axibase/atsd:16747
 ```

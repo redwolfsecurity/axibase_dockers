@@ -12,8 +12,8 @@ LABEL com.axibase.vendor="Axibase Corporation" \
       com.axibase.platform="linux" \
       name="axibase/atsd" \
       vendor="Axibase Corporation" \
-      version="16741" \
-      release="2" \
+      version="16747" \
+      release="3" \
       summary="Axibase Time Series Database" \
       description="High-performance database for time-series data with built-in SQL, rule-engine, and visualization." \
       url="https://www.axibase.com" \
@@ -25,8 +25,9 @@ LABEL com.axibase.vendor="Axibase Corporation" \
       --publish 8443:8443 \
       --publish 8081:8081 \
       --publish 8082:8082/udp \
-      axibase/atsd:16741" \
-      stop="docker stop atsd"
+      axibase/atsd:16747" \
+      stop="docker stop atsd" \
+      io.k8s.display-name="ATSD"
 
 COPY help.1 /
 COPY licenses /licenses
