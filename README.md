@@ -18,7 +18,7 @@ ATSD provides the following advantanges for application developers and data scie
 * Image name: `axibase/atsd:latest`
 * Base: ubuntu:14.04
 * Product Version: Community Edition
-* [Dockerfile](https://github.com/axibase/dockers/blob/master/atsd/Dockerfile)
+* [Dockerfile](https://github.com/axibase/dockers/blob/master/Dockerfile)
 
 ## Start Container
 
