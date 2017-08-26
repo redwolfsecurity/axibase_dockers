@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 MAINTAINER ATSD Developers <dev-atsd@axibase.com>
 ENV version latest
 #metadata
@@ -6,6 +6,8 @@ LABEL com.axibase.vendor="Axibase Corporation" \
   com.axibase.product="Axibase Time Series Database" \
   com.axibase.code="ATSD" \
   com.axibase.revision="${version}"
+  
+RUN apt-get update && apt-get install --no-install-recommends -y locales && rm -rf /var/lib/apt/lists/*;
 
 #configure system
 RUN locale-gen en_US.UTF-8 \
