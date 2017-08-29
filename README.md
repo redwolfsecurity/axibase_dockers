@@ -16,8 +16,7 @@ ATSD provides the following advantanges for application developers and data scie
 ## Image Summary
 
 * Image name: `axibase/atsd:latest`
-* Base: ubuntu:14.04
-* Product Version: Community Edition
+* Base Image: Ubuntu 16.04
 * [Dockerfile](https://github.com/axibase/dockers/blob/master/Dockerfile)
 
 ## Start Container
@@ -47,8 +46,7 @@ You should see an _ATSD start completed_ message at the end of the `start.log` f
 ```
 ...
  * [ATSD] Starting ATSD ...
- * [ATSD] ATSD not running.
- * [ATSD] ATSD java version "1.7.0_111"
+...
  * [ATSD] Waiting for ATSD to start. Checking ATSD web-interface port 8088 ...
  * [ATSD] Waiting for ATSD to bind to port 8088 ...( 1 of 20 )
 ...
