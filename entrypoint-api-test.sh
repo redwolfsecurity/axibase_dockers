@@ -8,7 +8,7 @@ fi
 DISTR_HOME="/opt/atsd"
 UPDATELOG="`readlink -f ${DISTR_HOME}/atsd/logs/update.log`"
 STARTLOG="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
-JAVA_DISTR_HOME="/usr/lib/jvm/java-1.7.0-openjdk-amd64/"
+JAVA_DISTR_HOME="/usr/lib/jvm/java-1.8.0-openjdk-amd64/"
 JAR="${JAVA_DISTR_HOME}/bin/jar"
 URL="https://axibase.com/public"
 LATEST="$URL/atsd_update_latest.htm"
