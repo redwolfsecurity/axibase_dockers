@@ -24,7 +24,7 @@
 <configuration>
 <property>
     <name>hbase.rootdir</name>
-<value>/opt/atsd/hbase-data</value> 
+<value>/opt/atsd/hbase-data</value>
 </property>
 <property>
     <name>hbase.hregion.majorcompaction</name>
@@ -39,20 +39,11 @@
    <value>localhost</value>
 </property>
 <property>
-   <name>dfs.replication</name>
-   <value>1</value>
-</property>
-<property>
    <name>hbase.zookeeper.property.dataDir</name>
    <value>$DISTRHOME/hbase/zookeeper</value>
 </property>
 <property>
-    <name>hbase.coprocessor.region.classes</name>
-    <value>com.axibase.tsd.hbase.coprocessor.MessagesStatsEndpoint, com.axibase.tsd.hbase.coprocessor.DeleteDataEndpoint, com.axibase.tsd.hbase.coprocessor.CompactRawDataEndpoint, org.apache.hadoop.hbase.coprocessor.example.BulkDeleteEndpoint</value>
-</property>
-<property>
     <name>hbase.regionserver.ipc.address</name>
     <value>localhost</value>
-</property>
+</property>    
 </configuration>
-
