@@ -41,7 +41,7 @@ if [ -n "$timezone" ]; then
     sed -i '/^DParams=.*/a DParams="\$DParams -Duser.timezone=$timezone"' /opt/atsd/atsd/bin/start-atsd.sh
 fi
 
-/opt/atsd/bin/atsd-dfs.sh start
+#/opt/atsd/bin/atsd-dfs.sh start
 /opt/atsd/bin/atsd-hbase.sh start
 echo "delete 'atsd_counter', '__inst', 'type:t'" | /opt/atsd/hbase/bin/hbase shell
 /opt/atsd/bin/atsd-tsd.sh start
