@@ -11,7 +11,7 @@ STARTLOG="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
 JAVA_DISTR_HOME="/usr/lib/jvm/java-1.7.0-openjdk-amd64/"
 JAR="${JAVA_DISTR_HOME}/bin/jar"
 URL="https://axibase.com/public"
-LATEST="$URL/atsd_ce_update_latest.htm"
+LATEST="$URL/atsd_update_latest.htm"
 LATESTTAR="${DISTR_HOME}/bin/atsd_latest.tar.gz"
 revisionFile="applicationContext-common.xml"
 
