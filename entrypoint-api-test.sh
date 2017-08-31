@@ -30,9 +30,9 @@ tar -xzvf $LATESTTAR -C ${DISTR_HOME}/bin/ >>$UPDATELOG 2>&1
 newRevision="`$JAR xf ${DISTR_HOME}/bin/target/atsd.*.jar $revisionFile; cat $revisionFile | grep "revisionNumber" | sed 's/[^0-9]//g'; rm -f $revisionFile`"
 logger "Current version: $newRevision"
 
-cd ${DISTR_HOME}/hbase/lib && mv -f atsd-hbase.*.jar atsd-hbase.jar.old && mv ${DISTR_HOME}/bin/target/atsd-hbase.*.jar ./
+cd ${DISTR_HOME}/hbase/lib && rm atsd-hbase.*.jar && mv ${DISTR_HOME}/bin/target/atsd-hbase.*.jar ./
 
-cd ${DISTR_HOME}/atsd/bin/ && mv -f atsd.*.jar atsd.jar.old && mv ${DISTR_HOME}/bin/target/atsd.*.jar ./
+cd ${DISTR_HOME}/atsd/bin/ && rm atsd.*.jar && mv ${DISTR_HOME}/bin/target/atsd.*.jar ./
 
 logger "Files replaced."
 
