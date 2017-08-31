@@ -20,8 +20,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
 
 #set hbase distributed mode false
 USER axibase
-RUN sed -i '/.*hbase.cluster.distributed.*/{n;s/.*/   <value>false<\/value>/}' /opt/atsd/hbase/conf/hbase-site.xml
-
 
 #comment out hadoop usage, stop checking hbase
 #RUN sed -i '52,55 s/^/#/' /opt/atsd/bin/atsd-all.sh && \
