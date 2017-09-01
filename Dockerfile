@@ -7,16 +7,14 @@ LABEL com.axibase.vendor="Axibase Corporation" \
   com.axibase.code="ATSD" \
   com.axibase.revision="${version}"
   
-RUN apt-get update && apt-get install --no-install-recommends -y locales && rm -rf /var/lib/apt/lists/*;
-
-#configure system
-RUN locale-gen en_US.UTF-8 \
-  && adduser --disabled-password --quiet --gecos "" axibase;
-
-#apt-get jobs
+#install and configure
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A57967CFB323846008796A6514F3CB79 \
   && echo "deb [arch=amd64] http://axibase.com/public/repository/deb/ ./" >> /etc/apt/sources.list \
-  && apt-get update && apt-get install -y atsd; 
+  && apt-get update \
+  && apt-get install --no-install-recommends -y locales \
+  && locale-gen en_US.UTF-8 \
+  && adduser --disabled-password --quiet --gecos "" axibase \
+  && apt-get install --no-install-recommends -y atsd && rm -rf /var/lib/apt/lists/*;
 
 #set hbase distributed mode false
 USER axibase
