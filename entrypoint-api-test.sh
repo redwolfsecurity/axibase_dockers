@@ -38,7 +38,7 @@ logger "Files replaced."
 
 #check timezone
 if [ -n "$timezone" ]; then
-    sed -i '/^DParams=.*/a DParams="\$DParams -Duser.timezone=$timezone"' /opt/atsd/atsd/bin/start-atsd.sh
+    echo "export JAVA_PROPERTIES=\"-Duser.timezone=$timezone \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
 fi
 
 #/opt/atsd/bin/atsd-dfs.sh start
