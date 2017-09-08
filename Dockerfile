@@ -15,7 +15,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
   && apt-get install --no-install-recommends -y locales \
   && locale-gen en_US.UTF-8 \
   && adduser --disabled-password --quiet --gecos "" axibase \
-  && env DOCKER_BUILD=1 apt-get install --no-install-recommends -y atsd=${version} \
+  && env SKIP_ATSD_INIT=1 apt-get install --no-install-recommends -y atsd=${version} \
   && rm -rf /var/lib/apt/lists/*;
 
 #set hbase distributed mode false
