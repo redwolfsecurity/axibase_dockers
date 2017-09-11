@@ -1,6 +1,6 @@
-% axibase/atsd:16747
+% registry.connect.redhat.com/axibase/atsd:17299
 % Axibase Corporation
-% July 10, 2017
+% September 11, 2017
 
 # DESCRIPTION
 High-performance database for time-series data with built-in SQL, rule-engine, and visualization. 
@@ -21,9 +21,9 @@ axibase@nurswghbs002 ~]# docker run \
 >   --publish 8082:8082/udp \
 >   --env COLLECTOR_USER_NAME=data-agent \
 >   --env COLLECTOR_USER_PASSWORD=Pwd78_ \
->   axibase/atsd:16747
-Unable to find image 'axibase/atsd:16747' locally
-latest: Pulling from axibase/atsd
+>   registry.connect.redhat.com/axibase/atsd:17299
+Unable to find image 'registry.connect.redhat.com/axibase/atsd:17299' locally
+latest: Pulling from registry.connect.redhat.com/axibase/atsd
 bf5d46315322: Pull complete
 9f13e0ac480c: Pull complete
 e8988b5b3097: Pull complete
@@ -33,7 +33,7 @@ ca48528e7708: Pull complete
 de225e971cf6: Pull complete
 6a3419ba188d: Pull complete
 Digest: sha256:f2c2957b1ffc8dbb24501495e98981899d2b018961a7742ff6adfd4f1e176429
-Status: Downloaded newer image for axibase/atsd:16747
+Status: Downloaded newer image for registry.connect.redhat.com/axibase/atsd:17299
 14d1f27bf0c139027b5f69009c0c5007d35be92d61b16071dc142fbc75acb36a
 ```
 
@@ -52,7 +52,7 @@ You should see an _ATSD start completed_ message at the end of the `start.log` f
 ...
  * [ATSD] Starting ATSD ...
  * [ATSD] ATSD not running.
- * [ATSD] ATSD java version "1.7.0_111"
+ * [ATSD] ATSD java version "1.8.0_111"
  * [ATSD] Waiting for ATSD to start. Checking ATSD web-interface port 8088 ...
  * [ATSD] Waiting for ATSD to bind to port 8088 ...( 1 of 20 )
 ...
@@ -104,5 +104,5 @@ docker run \
   --publish 8443:8443 \
   --publish 8081:8081 \
   --publish 8082:8082/udp \
-  axibase/atsd:16747
+  registry.connect.redhat.com/axibase/atsd:17299
 ```

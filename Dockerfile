@@ -1,19 +1,19 @@
 FROM registry.access.redhat.com/rhel7
-MAINTAINER ATSD Developers <dev-atsd@axibase.com>
 
 #default to UTF-8 file.encoding
 ENV LANG en_US.utf8
 
 #metadata
-LABEL com.axibase.vendor="Axibase Corporation" \
+LABEL com.axibase.maintainer="ATSD Developers <dev-atsd@axibase.com>" \
+      com.axibase.vendor="Axibase Corporation" \
       com.axibase.product="Axibase Time Series Database" \
       com.axibase.code="ATSD" \
       com.axibase.function="database" \
       com.axibase.platform="linux" \
-      name="axibase/atsd" \
+      name="registry.connect.redhat.com/axibase/atsd" \
       vendor="Axibase Corporation" \
-      version="16747" \
-      release="3" \
+      version="17299" \
+      release="5" \
       summary="Axibase Time Series Database" \
       description="High-performance database for time-series data with built-in SQL, rule-engine, and visualization." \
       url="https://www.axibase.com" \
@@ -25,7 +25,7 @@ LABEL com.axibase.vendor="Axibase Corporation" \
       --publish 8443:8443 \
       --publish 8081:8081 \
       --publish 8082:8082/udp \
-      axibase/atsd:16747" \
+      registry.connect.redhat.com/axibase/atsd:17299" \
       stop="docker stop atsd" \
       io.k8s.display-name="ATSD"
 
@@ -37,7 +37,7 @@ RUN REPOLIST=rhel-7-server-rpms,axibase &&\
     printf "[axibase]\nname=Axibase Repository\nbaseurl=https://axibase.com/public/repository/rpm\nenabled=1\ngpgcheck=0\nprotect=1" >> /etc/yum.repos.d/axibase.repo &&\
     yum -y update-minimal --disablerepo "*" --enablerepo rhel-7-server-rpms --setopt=tsflags=nodocs \
       --security --sec-severity=Important --sec-severity=Critical && \
-    yum -y install --disablerepo "*" --enablerepo ${REPOLIST} --setopt=tsflags=nodocs atsd && \
+    env SKIP_ATSD_INIT=1 yum -y install --disablerepo "*" --enablerepo ${REPOLIST} --setopt=tsflags=nodocs atsd && \
     yum clean all
 
 USER axibase
