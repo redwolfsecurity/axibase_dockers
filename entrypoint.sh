@@ -41,9 +41,9 @@ printf "=====================\nATSD start completed.\n=====================\n" |
 
 if curl -o - http://127.0.0.1:8088/login?type=writer 2>/dev/null | grep -q "400"; then
     echo "Collector account exists." > /dev/null
-elif [ -n $webPassword ] && [ -n $webUser ]; then
-    echo "COLLECTOR_USER_NAME or COLLECTOR_USER_PASSWORD are given. Collector account will be created." | tee -a $LOGFILESTART
-    if curl -i --data "userBean.username=$webUser&userBean.password=$webPassword&repeatPassword=$webPassword" http://127.0.0.1:8088/login?type=${webType} | grep -q "302"; then
+elif [ -n "$webPassword" ] && [ -n "$webUser" ]; then
+    echo "COLLECTOR_USER_NAME and COLLECTOR_USER_PASSWORD are given. Collector account will be created." | tee -a $LOGFILESTART
+    if curl -s -i --data "userBean.username=$webUser&userBean.password=$webPassword&repeatPassword=$webPassword" http://127.0.0.1:8088/login?type=${webType} | grep -q "302"; then
         echo "Collector account with username: $webUser, with usertype: $webType was created." | tee -a  $LOGFILESTART
     else
         echo "Failed to create collector account $webUser . Try to create it manually." | tee -a  $LOGFILESTART
@@ -52,7 +52,11 @@ fi
 
 if [ -n "$login" ] && [ -n "$password" ]; then
     echo "Login and password are given. Admin account will be created." | tee -a $LOGFILESTART
-    curl -i --data "userBean.username=$login&userBean.password=$password&repeatPassword=$password" http://127.0.0.1:8088/login
+    if curl -s -i --data "userBean.username=$login&userBean.password=$password&repeatPassword=$password" http://127.0.0.1:8088/login | grep -q "302"; then
+        echo "Admin account with username: $login was created." | tee -a  $LOGFILESTART
+    else
+        echo "Failed to create admin account $login . Try to create it manually." | tee -a  $LOGFILESTART
+    fi
 fi
 
 while [ "$executing" = "true" ]; do
