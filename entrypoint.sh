@@ -52,7 +52,7 @@ else
 fi
 
 if [ -n "$login" ] && [ -n "$password" ]; then
-    curl -i --data "userBean.username=$axiname&userBean.password=$axipass&repeatPassword=$axipass" http://127.0.0.1:8088/login
+    curl -i --data "userBean.username=$login&userBean.password=$password&repeatPassword=$password" http://127.0.0.1:8088/login
 fi
 
 while [ "$executing" = "true" ]; do
