@@ -41,9 +41,8 @@ printf "=====================\nATSD start completed.\n=====================\n" |
 
 if curl -o - http://127.0.0.1:8088/login?type=writer 2>/dev/null | grep -q "400"; then
     echo "Collector account exists." > /dev/null
-elif [ -z $webPassword ] || [ -z $webUser ]; then
-    echo "COLLECTOR_USER_NAME or COLLECTOR_USER_PASSWORD is empty. Collector account will not be created." | tee -a $LOGFILESTART
-else
+elif [ -n $webPassword ] && [ -n $webUser ]; then
+    echo "COLLECTOR_USER_NAME or COLLECTOR_USER_PASSWORD are given. Collector account will be created." | tee -a $LOGFILESTART
     if curl -i --data "userBean.username=$webUser&userBean.password=$webPassword&repeatPassword=$webPassword" http://127.0.0.1:8088/login?type=${webType} | grep -q "302"; then
         echo "Collector account with username: $webUser, with usertype: $webType was created." | tee -a  $LOGFILESTART
     else
@@ -52,6 +51,7 @@ else
 fi
 
 if [ -n "$login" ] && [ -n "$password" ]; then
+    echo "Login and password are given. Admin account will be created." | tee -a $LOGFILESTART
     curl -i --data "userBean.username=$login&userBean.password=$password&repeatPassword=$password" http://127.0.0.1:8088/login
 fi
 
