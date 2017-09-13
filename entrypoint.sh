@@ -8,18 +8,25 @@ ATSD_ALL="${SCRIPTS_HOME}/atsd-all.sh"
 LOGFILESTART="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
 LOGFILESTOP="`readlink -f ${DISTR_HOME}/atsd/logs/stop.log`"
 
-webUser="${COLLECTOR_USER_NAME}"
-webPassword="${COLLECTOR_USER_PASSWORD}"
-webType="${COLLECTOR_USER_TYPE-writer}"
-if [ -n "$webPassword" ] && [ ${#webPassword} -lt 6 ]; then
-    echo "Minimum password length is 6 characters. Your password length is ${#webPassword}. Container will be stopped." | tee -a $LOGFILESTART
+collectorUser="${COLLECTOR_USER_NAME}"
+collectorPassword="${COLLECTOR_USER_PASSWORD}"
+collectorType="${COLLECTOR_USER_TYPE-writer}"
+
+if [ -n "$collectorPassword" ] && [ ${#collectorPassword} -lt 6 ]; then
+    echo "Minimum password length for collector account is 6 characters. Container start aborted." | tee -a $LOGFILESTART
     exit 1
 fi
 
-#check timezone
+if [ -n "$password" ] && [ ${#password} -lt 6 ]; then
+    echo "Minimum password length for administrator account is 6 characters. Container start aborted." | tee -a $LOGFILESTART
+    exit 1
+fi
+
+# set custom timezone
 if [ -n "$timezone" ]; then
     echo "export JAVA_PROPERTIES=\"-Duser.timezone=$timezone \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
 fi
+
 directoriesToCheck="hdfs-cache hdfs-data hdfs-data-name"
 firstStart="true"
 executing="true"
@@ -29,33 +36,36 @@ for directory in $directoriesToCheck; do
         firstStart="false"
     fi
 done
+
 if [ "$firstStart" = "true" ]; then
     $installUser
 else
     ${ATSD_ALL} start
 fi
+
 if [ $? -eq 1 ]; then
-    echo "Can not start atsd automatically. Check $LOGFILESTART file." | tee -a $LOGFILESTART
+    echo "Failed to start ATSD. Check $LOGFILESTART file." | tee -a $LOGFILESTART
 fi
+
 printf "=====================\nATSD start completed.\n=====================\n" | tee -a $LOGFILESTART
 
 if curl -o - http://127.0.0.1:8088/login?type=writer 2>/dev/null | grep -q "400"; then
-    echo "Collector account exists." > /dev/null
-elif [ -n "$webPassword" ] && [ -n "$webUser" ]; then
-    echo "COLLECTOR_USER_NAME and COLLECTOR_USER_PASSWORD are given. Collector account will be created." | tee -a $LOGFILESTART
-    if curl -s -i --data "userBean.username=$webUser&userBean.password=$webPassword&repeatPassword=$webPassword" http://127.0.0.1:8088/login?type=${webType} | grep -q "302"; then
-        echo "Collector account with username: $webUser, with usertype: $webType was created." | tee -a  $LOGFILESTART
+    echo "Collector account already exists." > /dev/null
+elif [ -n "$collectorPassword" ] && [ -n "$collectorUser" ]; then
+    echo "Collector username and password variables are set. Collector account will be created." | tee -a $LOGFILESTART
+    if curl -s -i --data "userBean.username=$collectorUser&userBean.password=$collectorPassword&repeatPassword=$collectorPassword" http://127.0.0.1:8088/login?type=${collectorType} | grep -q "302"; then
+        echo "Collector account with username: $collectorUser, with usertype: $collectorType was created." | tee -a  $LOGFILESTART
     else
-        echo "Failed to create collector account $webUser . Try to create it manually." | tee -a  $LOGFILESTART
+        echo "Failed to create collector account $collectorUser." | tee -a  $LOGFILESTART
     fi
 fi
 
 if [ -n "$login" ] && [ -n "$password" ]; then
-    echo "Login and password are given. Admin account will be created." | tee -a $LOGFILESTART
+    echo "Administrator username and password variables are set. Administrator account will be created." | tee -a $LOGFILESTART
     if curl -s -i --data "userBean.username=$login&userBean.password=$password&repeatPassword=$password" http://127.0.0.1:8088/login | grep -q "302"; then
-        echo "Admin account with username: $login was created." | tee -a  $LOGFILESTART
+        echo "Administrator account with username: $login was created." | tee -a  $LOGFILESTART
     else
-        echo "Failed to create admin account $login . Try to create it manually." | tee -a  $LOGFILESTART
+        echo "Failed to create administrator account $login." | tee -a  $LOGFILESTART
     fi
 fi
 
