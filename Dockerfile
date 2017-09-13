@@ -12,7 +12,7 @@ LABEL com.axibase.maintainer="ATSD Developers <dev-atsd@axibase.com>" \
       com.axibase.platform="linux" \
       name="registry.connect.redhat.com/axibase/atsd" \
       vendor="Axibase Corporation" \
-      version="17320" \
+      version="17323" \
       release="5" \
       summary="Axibase Time Series Database" \
       description="High-performance database for time-series data with built-in SQL, rule-engine, and visualization." \
@@ -25,7 +25,7 @@ LABEL com.axibase.maintainer="ATSD Developers <dev-atsd@axibase.com>" \
       --publish 8443:8443 \
       --publish 8081:8081 \
       --publish 8082:8082/udp \
-      registry.connect.redhat.com/axibase/atsd:17320" \
+      registry.connect.redhat.com/axibase/atsd:17323" \
       stop="docker stop atsd" \
       io.k8s.display-name="ATSD"
 

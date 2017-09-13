@@ -1,4 +1,4 @@
-% registry.connect.redhat.com/axibase/atsd:17320
+% registry.connect.redhat.com/axibase/atsd:17323
 % Axibase Corporation
 % September 13, 2017
 
@@ -21,8 +21,8 @@ axibase@nurswghbs002 ~]# docker run \
 >   --publish 8082:8082/udp \
 >   --env COLLECTOR_USER_NAME=data-agent \
 >   --env COLLECTOR_USER_PASSWORD=Pwd78_ \
->   registry.connect.redhat.com/axibase/atsd:17320
-Unable to find image 'registry.connect.redhat.com/axibase/atsd:17320' locally
+>   registry.connect.redhat.com/axibase/atsd:17323
+Unable to find image 'registry.connect.redhat.com/axibase/atsd:17323' locally
 latest: Pulling from registry.connect.redhat.com/axibase/atsd
 bf5d46315322: Pull complete
 9f13e0ac480c: Pull complete
@@ -33,7 +33,7 @@ ca48528e7708: Pull complete
 de225e971cf6: Pull complete
 6a3419ba188d: Pull complete
 Digest: sha256:f2c2957b1ffc8dbb24501495e98981899d2b018961a7742ff6adfd4f1e176429
-Status: Downloaded newer image for registry.connect.redhat.com/axibase/atsd:17320
+Status: Downloaded newer image for registry.connect.redhat.com/axibase/atsd:17323
 14d1f27bf0c139027b5f69009c0c5007d35be92d61b16071dc142fbc75acb36a
 ```
 
@@ -52,7 +52,7 @@ You should see an _ATSD start completed_ message at the end of the `start.log` f
 ...
  * [ATSD] Starting ATSD ...
  * [ATSD] ATSD not running.
- * [ATSD] ATSD atsd.17320.jar revision: 17320
+ * [ATSD] ATSD atsd.17323.jar revision: 17323
  * [ATSD] ATSD atsd-hbase.17270.jar revision: 17270
  * [ATSD] ATSD openjdk version "1.8.0_144"
  * [ATSD] Waiting for ATSD to start. Checking ATSD web-interface port 8088 ...
@@ -116,5 +116,5 @@ docker run \
   --publish 8443:8443 \
   --publish 8081:8081 \
   --publish 8082:8082/udp \
-  registry.connect.redhat.com/axibase/atsd:17320
+  registry.connect.redhat.com/axibase/atsd:17323
 ```
