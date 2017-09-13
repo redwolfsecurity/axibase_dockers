@@ -70,7 +70,7 @@ ATSD web interface is accessible on port 8088/http and 8443/https.
 |`--restart` | No | Auto-restart policy. _Not supported in all Docker Engine versions._ |
 |`--publish` | No | Publish a container's port to the host. |
 
-## Environment Parameters
+## Environmental Variables
 
 | **Name** | **Required** | **Description** |
 |:---|:---|:---|
