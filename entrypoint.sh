@@ -17,14 +17,14 @@ if [ -n "$collectorPassword" ] && [ ${#collectorPassword} -lt 6 ]; then
     exit 1
 fi
 
-if [ -n "$password" ] && [ ${#password} -lt 6 ]; then
+if [ -n "$ADMIN_USER_PASSWORD" ] && [ ${#ADMIN_USER_PASSWORD} -lt 6 ]; then
     echo "Minimum password length for administrator account is 6 characters. Container start aborted." | tee -a $LOGFILESTART
     exit 1
 fi
 
 # set custom timezone
-if [ -n "$timezone" ]; then
-    echo "export JAVA_PROPERTIES=\"-Duser.timezone=$timezone \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
+if [ -n "$DB_TIMEZONE" ]; then
+    echo "export JAVA_PROPERTIES=\"-Duser.timezone=$DB_TIMEZONE \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
 fi
 
 directoriesToCheck="hdfs-cache hdfs-data hdfs-data-name"
@@ -60,12 +60,12 @@ elif [ -n "$collectorPassword" ] && [ -n "$collectorUser" ]; then
     fi
 fi
 
-if [ -n "$login" ] && [ -n "$password" ]; then
+if [ -n "$ADMIN_USER_NAME" ] && [ -n "$ADMIN_USER_PASSWORD" ]; then
     echo "Administrator username and password variables are set. Administrator account will be created." | tee -a $LOGFILESTART
-    if curl -s -i --data "userBean.username=$login&userBean.password=$password&repeatPassword=$password" http://127.0.0.1:8088/login | grep -q "302"; then
-        echo "Administrator account with username: $login was created." | tee -a  $LOGFILESTART
+    if curl -s -i --data "userBean.username=$ADMIN_USER_NAME&userBean.password=$ADMIN_USER_PASSWORD&repeatPassword=$ADMIN_USER_PASSWORD" http://127.0.0.1:8088/login | grep -q "302"; then
+        echo "Administrator account with username: $ADMIN_USER_NAME was created." | tee -a  $LOGFILESTART
     else
-        echo "Failed to create administrator account $login." | tee -a  $LOGFILESTART
+        echo "Failed to create administrator account $ADMIN_USER_NAME." | tee -a  $LOGFILESTART
     fi
 fi
 
