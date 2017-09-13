@@ -40,6 +40,8 @@ RUN REPOLIST=rhel-7-server-rpms,axibase &&\
     env SKIP_ATSD_INIT=1 yum -y install --disablerepo "*" --enablerepo ${REPOLIST} --setopt=tsflags=nodocs atsd && \
     yum clean all
 
+RUN rpm -e java-1.8.0-openjdk-headless-debug-1.8.0.77-0.b03.el7_2.x86_64
+
 USER axibase
 
 #set hbase distributed mode false
