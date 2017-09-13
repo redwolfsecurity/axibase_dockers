@@ -68,7 +68,7 @@ You should see an \fIATSD start completed\fP message at the end of the \fB\fCsta
  * [ATSD] ATSD not running.
  * [ATSD] ATSD atsd.17320.jar revision: 17320
  * [ATSD] ATSD atsd\-hbase.17270.jar revision: 17270
- * [ATSD] ATSD openjdk version "1.8.0.144"
+ * [ATSD] ATSD openjdk version "1.8.0\_144"
  * [ATSD] Waiting for ATSD to start. Checking ATSD web\-interface port 8088 ...
  * [ATSD] Waiting for ATSD to bind to port 8088 ...( 1 of 60 )
 ...
@@ -103,12 +103,10 @@ allbox;
 .SH Environmental Variables.TS
 allbox;
 \fBName\fP  \fBRequired\fP  \fBDescription\fP 
-\fB\fC\-\-env login\fR		No		User name for the built\-in administrator account.	
+\fB\fC\-\-env ADMIN\_USER\_NAME\fR		No		User name for the built\-in administrator account.	
 
-\fB\fC\-\-env password\fR		No		
+\fB\fC\-\-env ADMIN\_USER\_PASSWORD\fR		No		
 \[la]https://github.com/axibase/atsd-docs/blob/master/administration/user-authentication.md#password-requirements\[ra] for the built\-in administrator.	
-
-\fB\fC\-\-env timezone\fR		No		Database timezone.	
 
 \fB\fC\-\-env COLLECTOR\_USER\_NAME\fR		No		User name for a data collector account.	
 
@@ -116,6 +114,9 @@ allbox;
 \[la]https://github.com/axibase/atsd-docs/blob/master/administration/user-authentication.md#password-requirements\[ra] for a data collector account.	
 
 \fB\fC\-\-env COLLECTOR\_USER\_TYPE\fR		No		User group for a data collector account, default value is \fB\fCwriter\fR.	
+
+\fB\fC\-\-env DB\_TIMEZONE\fR		No		Database 
+\[la]https://github.com/axibase/atsd/blob/master/api/network/timezone-list.md\[ra].	
 
 .TE
 
