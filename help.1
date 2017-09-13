@@ -1,9 +1,9 @@
-.TH "registry.connect.redhat.com/axibase/atsd:17299" "Axibase Corporation" "September 11, 2017"  ""
+.TH "registry.connect.redhat.com/axibase/atsd:17320" "Axibase Corporation" "September 13, 2017"  ""
 
 
 .SH DESCRIPTION
 .PP
-High-performance database for time-series data with built-in SQL, rule-engine, and visualization.
+High\-performance database for time\-series data with built\-in SQL, rule\-engine, and visualization.
 
 
 .SH USAGE
@@ -25,8 +25,8 @@ axibase@nurswghbs002 \~]# docker run \\
 >   \-\-publish 8082:8082/udp \\
 >   \-\-env COLLECTOR\_USER\_NAME=data\-agent \\
 >   \-\-env COLLECTOR\_USER\_PASSWORD=Pwd78\_ \\
->   registry.connect.redhat.com/axibase/atsd:17299
-Unable to find image 'registry.connect.redhat.com/axibase/atsd:17299' locally
+>   registry.connect.redhat.com/axibase/atsd:17320
+Unable to find image 'registry.connect.redhat.com/axibase/atsd:17320' locally
 latest: Pulling from registry.connect.redhat.com/axibase/atsd
 bf5d46315322: Pull complete
 9f13e0ac480c: Pull complete
@@ -37,7 +37,7 @@ ca48528e7708: Pull complete
 de225e971cf6: Pull complete
 6a3419ba188d: Pull complete
 Digest: sha256:f2c2957b1ffc8dbb24501495e98981899d2b018961a7742ff6adfd4f1e176429
-Status: Downloaded newer image for registry.connect.redhat.com/axibase/atsd:17299
+Status: Downloaded newer image for registry.connect.redhat.com/axibase/atsd:17320
 14d1f27bf0c139027b5f69009c0c5007d35be92d61b16071dc142fbc75acb36a
 
 .fi
@@ -66,11 +66,13 @@ You should see an \fIATSD start completed\fP message at the end of the \fB\fCsta
 ...
  * [ATSD] Starting ATSD ...
  * [ATSD] ATSD not running.
- * [ATSD] ATSD java version "1.8.0\_111"
+ * [ATSD] ATSD atsd.17320.jar revision: 17320
+ * [ATSD] ATSD atsd\-hbase.17270.jar revision: 17270
+ * [ATSD] ATSD openjdk version "1.8.0.144"
  * [ATSD] Waiting for ATSD to start. Checking ATSD web\-interface port 8088 ...
- * [ATSD] Waiting for ATSD to bind to port 8088 ...( 1 of 20 )
+ * [ATSD] Waiting for ATSD to bind to port 8088 ...( 1 of 60 )
 ...
- * [ATSD] Waiting for ATSD to bind to port 8088 ...( 11 of 20 )
+ * [ATSD] Waiting for ATSD to bind to port 8088 ...( 7 of 60 )
  * [ATSD] ATSD web interface:
 ...
  * [ATSD] http://172.17.0.2:8088
@@ -96,14 +98,30 @@ allbox;
 
 \fB\fC\-\-publish\fR		No		Publish a container's port to the host.	
 
+.TE
+
+.SH Environmental Variables.TS
+allbox;
+\fBName\fP  \fBRequired\fP  \fBDescription\fP 
+\fB\fC\-\-env login\fR		No		User name for the built\-in administrator account.	
+
+\fB\fC\-\-env password\fR		No		
+\[la]https://github.com/axibase/atsd-docs/blob/master/administration/user-authentication.md#password-requirements\[ra] for the built\-in administrator.	
+
+\fB\fC\-\-env timezone\fR		No		Database timezone.	
+
 \fB\fC\-\-env COLLECTOR\_USER\_NAME\fR		No		User name for a data collector account.	
 
-\fB\fC\-\-env COLLECTOR\_USER\_PASSWORD\fR		No		Password for a data collector account, subject to 
-\[la]../administration/user-authentication.md#password-requirements\[ra].	
+\fB\fC\-\-env COLLECTOR\_USER\_PASSWORD\fR		No		
+\[la]https://github.com/axibase/atsd-docs/blob/master/administration/user-authentication.md#password-requirements\[ra] for a data collector account.	
 
 \fB\fC\-\-env COLLECTOR\_USER\_TYPE\fR		No		User group for a data collector account, default value is \fB\fCwriter\fR.	
 
 .TE
+
+.PP
+View additional launch examples 
+\[la]https://github.com/axibase/atsd-docs/blob/master/installation/docker.md#option-1-configure-collector-account-automatically\[ra].
 
 .SH Exposed Ports.IP \n+[step]
 
@@ -137,7 +155,7 @@ docker run \\
   \-\-publish 8443:8443 \\
   \-\-publish 8081:8081 \\
   \-\-publish 8082:8082/udp \\
-  registry.connect.redhat.com/axibase/atsd:17299
+  registry.connect.redhat.com/axibase/atsd:17320
 
 .fi
 .RE
