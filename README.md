@@ -72,6 +72,8 @@ ATSD web interface is accessible on port 8088/http and 8443/https.
 |`--env COLLECTOR_USER_NAME` | No | User name for a data collector account. |
 |`--env COLLECTOR_USER_PASSWORD` | No | Password for a data collector account, subject to [requirements](https://github.com/axibase/atsd-docs/blob/master/administration/user-authentication.md#password-requirements).|
 |`--env COLLECTOR_USER_TYPE` | No | User group for a data collector account, default value is `writer`.|
+|`--env login` | No | User name for admin account. |
+|`--env password` | No | Password for admin account, subject to [requirements](https://github.com/axibase/atsd-docs/blob/master/administration/user-authentication.md#password-requirements).|
 
 See additional launch examples [here](https://github.com/axibase/atsd-docs/blob/master/installation/docker.md#option-1-configure-collector-account-automatically).
 
