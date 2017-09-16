@@ -14,31 +14,19 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
   && apt-get install --no-install-recommends -y locales \
   && locale-gen en_US.UTF-8 \
   && adduser --disabled-password --quiet --gecos "" axibase \
-  && apt-get install --no-install-recommends -y atsd && rm -rf /var/lib/apt/lists/*;
-
-#set hbase distributed mode false
-USER axibase
-
-#comment out hadoop usage, stop checking hbase
-#RUN sed -i '52,55 s/^/#/' /opt/atsd/bin/atsd-all.sh && \
-#	sed -i '62,65 s/^/#/' /opt/atsd/bin/atsd-all.sh && \
-#	sed -i '300 s/^/#/' /opt/atsd/bin/atsd-hbase.sh && \
-#	sed -i '316,65 s/^/#/' /opt/atsd/bin/atsd-hbase.sh
+  && apt-get install --no-install-recommends -y atsd && rm -rf /var/lib/apt/lists/* \
+  && su -c '/opt/atsd/bin/atsd-all.sh stop' axibase
 
 #put script to docker
 ADD hbase-site.xml /opt/atsd/hbase/conf/
 ADD rules.xml /opt/atsd/
 
-#prepare database
-RUN /opt/atsd/install_user.sh && /opt/atsd/bin/atsd-all.sh stop
-
 #custom entrypoint to api-test reason
 ADD entrypoint-api-test.sh /
 
-USER root
 RUN chown -R axibase:axibase /opt/atsd /entrypoint*
-USER axibase
 
+USER axibase
 #jmx, atsd(tcp), atsd(udp), pickle, http, https
 EXPOSE 1099 8081 8082/udp 8084 8088 8443
 VOLUME ["/opt/atsd"]
