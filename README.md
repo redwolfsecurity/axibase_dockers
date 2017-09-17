@@ -41,24 +41,21 @@ docker logs -f atsd
 
 It may take up to 5 minutes to initialize the database.
 
-You should see an _ATSD start completed_ message at the end of the `start.log` file.
+You should see 'start completed' message at the end of the `start.log` file.
 
 ```
+[ATSD] Starting ATSD ...
 ...
- * [ATSD] Starting ATSD ...
+[ATSD] Waiting for ATSD to start. Checking ATSD user interface port 8088 ...
+[ATSD] Waiting for ATSD to bind to port 8088 ...( 1 of 20 )
 ...
- * [ATSD] Waiting for ATSD to start. Checking ATSD web-interface port 8088 ...
- * [ATSD] Waiting for ATSD to bind to port 8088 ...( 1 of 20 )
-...
- * [ATSD] Waiting for ATSD to bind to port 8088 ...( 11 of 20 )
- * [ATSD] ATSD web interface:
-...
- * [ATSD] http://172.17.0.2:8088
- * [ATSD] https://172.17.0.2:8443
- * [ATSD] ATSD start completed.
+[ATSD] ATSD web interface:
+[ATSD] http://172.17.0.2:8088
+[ATSD] https://172.17.0.2:8443
+[ATSD] ATSD start completed.
 ```
 
-ATSD web interface is accessible on port 8088/http and 8443/https.
+The web interface is accessible on port 8088/http and 8443/https.
 
 ## Launch Parameters
 
@@ -70,7 +67,7 @@ ATSD web interface is accessible on port 8088/http and 8443/https.
 |`--restart` | No | Auto-restart policy. _Not supported in all Docker Engine versions._ |
 |`--publish` | No | Publish a container's port to the host. |
 
-## Environmental Variables
+## Environment Variables
 
 | **Name** | **Required** | **Description** |
 |:---|:---|:---|
@@ -85,31 +82,15 @@ View additional launch examples [here](https://github.com/axibase/atsd-docs/blob
 
 ## Exposed Ports
 
-* 8088 – http
-* 8443 – https
-* 8081 – [TCP network commands](https://github.com/axibase/atsd-docs/tree/master/api/network#network-api)
-* 8082 – [UDP network commands](https://github.com/axibase/atsd-docs/tree/master/api/network#udp-datagrams)
+| **Name** | **Protocol** | **Description** |
+|:---|:---|:---|
+| 8088 | http | API, user interface. |
+| 8443 | https | API, user interface (secure). |
+| 8081 | tcp | Incoming [network commands](https://github.com/axibase/atsd-docs/tree/master/api/network#network-api). |
+| 8082 | udp | Incoming [network commands](https://github.com/axibase/atsd-docs/tree/master/api/network#udp-datagrams). |
+| 8084 | tcp | Incoming Graphite commands in Python pickle format. |
+| 1099 | tcp | JMX |
 
-## Port Mappings
-
-Depending on your Docker host configuration, you may need to change port mappings in case some of the published ports are already taken.
-
-```sh
-Cannot start container <container_id>: failed to create endpoint atsd on network bridge:
-Bind for 0.0.0.0:8088 failed: port is already allocated
-```
-
-```properties
-docker run \
-  --detach \
-  --name=atsd \
-  --restart=always \
-  --publish 9088:8088 \
-  --publish 9443:8443 \
-  --publish 9081:8081 \
-  --publish 9082:8082/udp \
-  axibase/atsd:latest
-```
 
 ## Troubleshooting
 
