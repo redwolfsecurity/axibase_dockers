@@ -15,10 +15,10 @@ COPY entry*.sh /
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A57967CFB323846008796A6514F3CB79 \
   && echo "deb [arch=amd64] http://axibase.com/public/repository/deb/ ./" >> /etc/apt/sources.list \
   && apt-get update \
-  && apt-get install --no-install-recommends -y locales \
+  && LANG=C DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y locales apt-utils \
   && locale-gen en_US.UTF-8 \
   && adduser --disabled-password --quiet --gecos "" axibase \
-  && apt-get install --no-install-recommends -y atsd=${version} \
+  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y atsd=${version} \
   && rm -rf /var/lib/apt/lists/* \
   && sed -i '/.*hbase.cluster.distributed.*/{n;s/.*/   <value>false<\/value>/}' /opt/atsd/hbase/conf/hbase-site.xml \
   && /entrycleanup.sh;
