@@ -68,9 +68,10 @@ if [ -n "$ADMIN_USER_NAME" ] && [ -n "$ADMIN_USER_PASSWORD" ]; then
     fi
 fi
 
-sleep infinity & sleep_pid=$!
-trap 'echo "kill signal handled, stopping processes ..."; kill $sleep_pid' SIGINT SIGTERM
-wait $sleep_pid
+while [ "$executing" = "true" ]; do
+    sleep 1
+    trap 'echo "kill signal handled, stopping processes ..."; executing="false"' SIGINT SIGTERM
+done
 
 echo "[ATSD] SIGTERM received ( docker stop ). Stopping services ..." | tee -a $LOGFILESTOP
 
