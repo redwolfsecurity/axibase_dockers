@@ -80,10 +80,10 @@ echo "[ATSD] SIGTERM received ( docker stop ). Stopping services ..." | tee -a $
 jps_output=$(jps)
 
 if echo ${jps_output} | grep -q "Server"; then
-    echo "[ATSD] Stopping ATSD server ..."
+    echo "[ATSD] Stopping ATSD server ..." | tee -a $LOGFILESTOP
     kill -SIGKILL $(echo $jps_output | grep 'Server' | awk '{print $1}')
 fi
-echo "[ATSD] Stopping HBase processes ..."
+echo "[ATSD] Stopping HBase processes ..." | tee -a $LOGFILESTOP
 if echo ${jps_output} | grep -q "HRegionServer"; then
     ${HBASE_DAEMON} stop regionserver
 fi
@@ -91,13 +91,13 @@ if echo ${jps_output} | grep -q "HMaster"; then
     ${HBASE_DAEMON} stop master
 fi
 if [ "$distributed" = "false" ]; then
-    echo "[ATSD] ZooKeeper data cleanup ..."
+    echo "[ATSD] ZooKeeper data cleanup ..." | tee -a $LOGFILESTOP
     rm -rf "$zk_dir"
 fi
 if echo ${jps_output} | grep -q "HQuorumPeer"; then
     ${HBASE_DAEMON} stop zookeeper
 fi
-echo "[ATSD] Stopping HDFS processes ..."
+echo "[ATSD] Stopping HDFS processes ..." | tee -a $LOGFILESTOP
 ${DFS_STOP}
 
 exit 0
