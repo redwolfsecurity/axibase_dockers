@@ -3,8 +3,12 @@ trap 'echo "kill signal handled, stopping processes ..."; executing="false"' SIG
 DISTR_HOME="/opt/atsd"
 installUser="${DISTR_HOME}/install_user.sh"
 ATSD_ALL="${DISTR_HOME}/bin/atsd-all.sh"
+HBASE="`readlink -f ${DISTR_HOME}/hbase/bin/hbase`"
+HBASE_DAEMON="`readlink -f ${DISTR_HOME}/hbase/bin/hbase-daemon.sh`"
+DFS_STOP="`readlink -f ${DISTR_HOME}/hadoop/sbin/stop-dfs.sh`"
 LOGFILESTART="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
 LOGFILESTOP="`readlink -f ${DISTR_HOME}/atsd/logs/stop.log`"
+CONF_TOOL="${HBASE} org.apache.hadoop.hbase.util.HBaseConfTool"
 
 collectorUser="${COLLECTOR_USER_NAME}"
 collectorPassword="${COLLECTOR_USER_PASSWORD}"
@@ -26,20 +30,23 @@ if [ -n "$DB_TIMEZONE" ]; then
     echo "export JAVA_PROPERTIES=\"-Duser.timezone=$DB_TIMEZONE \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
 fi
 
+distributed=$(${CONF_TOOL} hbase.cluster.distributed)
+zk_dir="${DISTR_HOME}/hbase/zookeeper"
+
 directoriesToCheck="hdfs-cache hdfs-data hdfs-data-name"
 firstStart="true"
 executing="true"
 
 for directory in $directoriesToCheck; do
-    if ! find  ${DISTR_HOME}/$directory -depth -type d -empty | grep ".*" >/dev/null 2>&1; then
+    if [ -d "${DISTR_HOME}/${directory}" ]; then
         firstStart="false"
     fi
 done
 
 if [ "$firstStart" = "true" ]; then
-    $installUser
-else
     ${ATSD_ALL} start skipTest
+else
+    ${ATSD_ALL} start
 fi
 
 if [ $? -eq 1 ]; then
@@ -64,11 +71,33 @@ if [ -n "$ADMIN_USER_NAME" ] && [ -n "$ADMIN_USER_PASSWORD" ]; then
     fi
 fi
 
-while [ "$executing" = "true" ]; do
-    sleep 1
-    trap 'echo "kill signal handled, stopping processes ..."; executing="false"' SIGINT SIGTERM
-done  
+sleep infinity & sleep_pid=$!
+trap 'echo "kill signal handled, stopping processes ..."; kill $sleep_pid' SIGINT SIGTERM
+wait $sleep_pid
 
-echo "[ATSD] SIGTERM received ( docker stop ). Stopping services ..." >> $LOGFILESTOP
-${ATSD_ALL} stop 
+echo "[ATSD] SIGTERM received ( docker stop ). Stopping services ..." | tee -a $LOGFILESTOP
+
+jps_output=$(jps)
+
+if echo ${jps_output} | grep -q "Server"; then
+    echo "[ATSD] Stopping ATSD server ..."
+    kill -SIGKILL $(echo $jps_output | grep 'Server' | awk '{print $1}')
+fi
+echo "[ATSD] Stopping HBase processes ..."
+if echo ${jps_output} | grep -q "HRegionServer"; then
+    ${HBASE_DAEMON} stop regionserver
+fi
+if echo ${jps_output} | grep -q "HMaster"; then
+    ${HBASE_DAEMON} stop master
+fi
+if [ "$distributed" = "false" ]; then
+    echo "[ATSD] ZooKeeper data cleanup ..."
+    rm -rf "$zk_dir"
+fi
+if echo ${jps_output} | grep -q "HQuorumPeer"; then
+    ${HBASE_DAEMON} stop zookeeper
+fi
+echo "[ATSD] Stopping HDFS processes ..."
+${DFS_STOP}
+
 exit 0
