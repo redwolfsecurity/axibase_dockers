@@ -8,7 +8,7 @@ HBASE_DAEMON="`readlink -f ${DISTR_HOME}/hbase/bin/hbase-daemon.sh`"
 DFS_STOP="`readlink -f ${DISTR_HOME}/hadoop/sbin/stop-dfs.sh`"
 LOGFILESTART="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
 LOGFILESTOP="`readlink -f ${DISTR_HOME}/atsd/logs/stop.log`"
-CONF_TOOL="${HBASE} org.apache.hadoop.hbase.util.HBaseConfTool"
+ZOOKEEPER_DATA_DIR="${DISTR_HOME}/hbase/zookeeper"
 
 collectorUser="${COLLECTOR_USER_NAME}"
 collectorPassword="${COLLECTOR_USER_PASSWORD}"
@@ -29,9 +29,6 @@ if [ -n "$DB_TIMEZONE" ]; then
     echo "[ATSD] Database timezone set to '$DB_TIMEZONE'." | tee -a  $LOGFILESTART
     echo "export JAVA_PROPERTIES=\"-Duser.timezone=$DB_TIMEZONE \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
 fi
-
-distributed=$(${CONF_TOOL} hbase.cluster.distributed)
-zk_dir="${DISTR_HOME}/hbase/zookeeper"
 
 directoriesToCheck="hdfs-cache hdfs-data hdfs-data-name"
 firstStart="true"
@@ -81,7 +78,7 @@ jps_output=$(jps)
 
 if echo ${jps_output} | grep -q "Server"; then
     echo "[ATSD] Stopping ATSD server ..." | tee -a $LOGFILESTOP
-    kill -SIGKILL $(echo $jps_output | grep 'Server' | awk '{print $1}')
+    kill -SIGKILL $(echo $jps_output | grep 'Server' | awk '{print $1}') 2>/dev/null
 fi
 echo "[ATSD] Stopping HBase processes ..." | tee -a $LOGFILESTOP
 if echo ${jps_output} | grep -q "HRegionServer"; then
@@ -90,13 +87,11 @@ fi
 if echo ${jps_output} | grep -q "HMaster"; then
     ${HBASE_DAEMON} stop master
 fi
-if [ "$distributed" = "false" ]; then
-    echo "[ATSD] ZooKeeper data cleanup ..." | tee -a $LOGFILESTOP
-    rm -rf "$zk_dir"
-fi
 if echo ${jps_output} | grep -q "HQuorumPeer"; then
     ${HBASE_DAEMON} stop zookeeper
 fi
+echo "[ATSD] ZooKeeper data cleanup ..." | tee -a $LOGFILESTOP
+rm -rf "${ZOOKEEPER_DATA_DIR}" 2>/dev/null
 echo "[ATSD] Stopping HDFS processes ..." | tee -a $LOGFILESTOP
 ${DFS_STOP}
 
