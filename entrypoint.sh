@@ -30,15 +30,13 @@ if [ -n "$DB_TIMEZONE" ]; then
     echo "export JAVA_PROPERTIES=\"-Duser.timezone=$DB_TIMEZONE \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
 fi
 
-directoriesToCheck="hdfs-cache hdfs-data hdfs-data-name"
+test_directory="${DISTR_HOME}/hdfs-cache"
 firstStart="true"
 executing="true"
 
-for directory in $directoriesToCheck; do
-    if [ -d "${DISTR_HOME}/${directory}" ]; then
-        firstStart="false"
-    fi
-done
+if [ -d "$test_directory" ] && [ -n "$(ls -A ${test_directory})" ]; then
+    firstStart="false"
+fi
 
 if [ "$firstStart" = "true" ]; then
     ${ATSD_ALL} start skipTest
