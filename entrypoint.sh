@@ -30,7 +30,7 @@ if [ -n "$DB_TIMEZONE" ]; then
     echo "export JAVA_PROPERTIES=\"-Duser.timezone=$DB_TIMEZONE \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
 fi
 
-test_directory="${DISTR_HOME}/hdfs-cache"
+test_directory="${DISTR_HOME}/hdfs-data"
 firstStart="true"
 executing="true"
 
