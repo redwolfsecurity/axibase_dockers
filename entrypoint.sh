@@ -3,8 +3,12 @@ trap 'echo "kill signal handled, stopping processes ..."; executing="false"' SIG
 DISTR_HOME="/opt/atsd"
 installUser="${DISTR_HOME}/install_user.sh"
 ATSD_ALL="${DISTR_HOME}/bin/atsd-all.sh"
+HBASE="`readlink -f ${DISTR_HOME}/hbase/bin/hbase`"
+HBASE_DAEMON="`readlink -f ${DISTR_HOME}/hbase/bin/hbase-daemon.sh`"
+DFS_STOP="`readlink -f ${DISTR_HOME}/hadoop/sbin/stop-dfs.sh`"
 LOGFILESTART="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
 LOGFILESTOP="`readlink -f ${DISTR_HOME}/atsd/logs/stop.log`"
+ZOOKEEPER_DATA_DIR="${DISTR_HOME}/hbase/zookeeper"
 
 collectorUser="${COLLECTOR_USER_NAME}"
 collectorPassword="${COLLECTOR_USER_PASSWORD}"
@@ -26,20 +30,18 @@ if [ -n "$DB_TIMEZONE" ]; then
     echo "export JAVA_PROPERTIES=\"-Duser.timezone=$DB_TIMEZONE \$JAVA_PROPERTIES\"" >> /opt/atsd/atsd/conf/atsd-env.sh
 fi
 
-directoriesToCheck="hdfs-cache hdfs-data hdfs-data-name"
+test_directory="${DISTR_HOME}/hdfs-data"
 firstStart="true"
 executing="true"
 
-for directory in $directoriesToCheck; do
-    if ! find  ${DISTR_HOME}/$directory -depth -type d -empty | grep ".*" >/dev/null 2>&1; then
-        firstStart="false"
-    fi
-done
+if [ -d "$test_directory" ] && [ -n "$(ls -A ${test_directory})" ]; then
+    firstStart="false"
+fi
 
 if [ "$firstStart" = "true" ]; then
-    $installUser
-else
     ${ATSD_ALL} start skipTest
+else
+    ${ATSD_ALL} start
 fi
 
 if [ $? -eq 1 ]; then
@@ -67,8 +69,29 @@ fi
 while [ "$executing" = "true" ]; do
     sleep 1
     trap 'echo "kill signal handled, stopping processes ..."; executing="false"' SIGINT SIGTERM
-done  
+done
 
-echo "[ATSD] SIGTERM received ( docker stop ). Stopping services ..." >> $LOGFILESTOP
-${ATSD_ALL} stop 
+echo "[ATSD] SIGTERM received ( docker stop ). Stopping services ..." | tee -a $LOGFILESTOP
+
+jps_output=$(jps)
+
+if echo ${jps_output} | grep -q "Server"; then
+    echo "[ATSD] Stopping ATSD server ..." | tee -a $LOGFILESTOP
+    kill -SIGKILL $(echo $jps_output | grep 'Server' | awk '{print $1}') 2>/dev/null
+fi
+echo "[ATSD] Stopping HBase processes ..." | tee -a $LOGFILESTOP
+if echo ${jps_output} | grep -q "HRegionServer"; then
+    ${HBASE_DAEMON} stop regionserver
+fi
+if echo ${jps_output} | grep -q "HMaster"; then
+    ${HBASE_DAEMON} stop master
+fi
+if echo ${jps_output} | grep -q "HQuorumPeer"; then
+    ${HBASE_DAEMON} stop zookeeper
+fi
+echo "[ATSD] ZooKeeper data cleanup ..." | tee -a $LOGFILESTOP
+rm -rf "${ZOOKEEPER_DATA_DIR}" 2>/dev/null
+echo "[ATSD] Stopping HDFS processes ..." | tee -a $LOGFILESTOP
+${DFS_STOP}
+
 exit 0
