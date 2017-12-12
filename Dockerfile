@@ -21,6 +21,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
   && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y atsd=${version} \
   && rm -rf /var/lib/apt/lists/* \
   && sed -i '/.*hbase.cluster.distributed.*/{n;s/.*/   <value>false<\/value>/}' /opt/atsd/hbase/conf/hbase-site.xml \
+  && sed -i '/com\.axibase\.tsd\.Server/{/^[^#]/{s/^/nohup /}}' /opt/atsd/atsd/bin/start-atsd.sh \
   && /entrycleanup.sh;
 
 USER axibase
