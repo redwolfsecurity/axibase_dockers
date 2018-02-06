@@ -61,7 +61,7 @@ docker run -d -v /:/rootfs:ro --privileged=true \
     --pid=host --net=host \
     --name=collectd axibase/collectd \
     --atsd-url=tcp://atsd_host:tcp_port \
-    --fqdn=false
+    --fqdn=false \
     --lvs
 ```
 
