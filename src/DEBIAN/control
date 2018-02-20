@@ -1,0 +1,10 @@
+package: collectd-axibase
+Version: 5.7.2
+Section: utils
+Architecture: amd64
+Maintainer: Axibase developers <dev@axibase.com> 
+Homepage: https://github.com/axibase/atsd-collectd-plugin
+Priority: extra
+Description: Collectd with write ATSD plugin
+ Small daemon which collects system information periodically and provides mechanisms to store
+ and monitor the values in a variety of ways.

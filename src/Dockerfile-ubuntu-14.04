@@ -1,0 +1,25 @@
+FROM ubuntu:14.04
+MAINTAINER ATSD Developers <dev-atsd@axibase.com>
+
+ENV version 5.7.2
+
+#metadata
+LABEL com.axibase.vendor="Axibase Corporation" \
+    com.axibase.product="Collectd with write_atsd plugin builder"
+
+RUN apt-get update &&  \
+    apt-get install -y \
+    gcc                \
+    make               \
+    automake           \
+    flex               \
+    bison              \
+    pkg-config         \
+    libtool            \
+    git                \
+    fakeroot           \
+    liblvm2-dev        \
+    openjdk-7-jdk      \
+    librdkafka-dev
+
+ENTRYPOINT ["/bin/bash","/buildfiles/entrypoint.sh","debian","14.04"]

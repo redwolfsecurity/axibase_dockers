@@ -1,0 +1,82 @@
+FROM centos:6
+MAINTAINER ATSD Developers <dev-atsd@axibase.com>
+ENV version 5.7.2
+#metadata
+LABEL com.axibase.vendor="Axibase Corporation" \
+      com.axibase.product="Collectd with write_atsd plugin builder"
+
+RUN yum -y install epel-release && \
+    yum -y install              \
+        which                   \
+        make                    \
+        flex                    \
+        bison                   \
+        pkgconfig               \
+        libtool                 \
+        git                     \
+        rpm-build               \
+        libgcrypt-devel         \
+        libtool-ltdl-devel      \
+        libcap-devel            \
+        curl-devel              \
+        libxml2-devel           \
+        yajl-devel              \
+        libdbi-devel            \
+        libudev-devel           \
+        libpcap-devel           \
+        OpenIPMI-devel          \
+        iptables-devel          \
+        java-devel              \
+        jpackage-utils          \
+        lvm2-devel              \
+        mysql-devel             \
+        libmnl-devel            \
+        iproute-devel           \
+        libnotify-devel         \
+        gtk2-devel              \
+        libesmtp-devel          \
+        openldap-devel          \
+        perl-ExtUtils-Embed     \
+        protobuf-c-devel        \
+        postgresql-devel        \
+        python-devel            \
+        rrdtool-devel           \
+        lm_sensors-devel        \
+        libatasmart-devel       \
+        net-snmp-devel          \
+        libvirt-devel           \
+        xfsprogs-devel          \
+        librabbitmq-devel       \
+        ganglia-devel           \
+        gpsd-devel              \
+        lua-devel               \
+        libmemcached-devel      \
+        libmodbus-devel         \
+        mosquitto-devel         \
+        nut-devel               \
+        liboping-devel          \
+        hiredis-devel           \
+        varnish-libs-devel      \
+        libmicrohttpd-devel     \
+        riemann-c-client-devel  \
+        zlib-devel              \
+        lz4-devel               \
+        openssl-devel           \
+        gcc-c++
+RUN curl http://mirror.tochlab.net/pub/gnu/autoconf-archive/autoconf-archive-2017.09.28.tar.xz \
+        --output autoconf-archive.tar.xz && \
+    tar xvf autoconf-archive.tar.xz && \
+    cd autoconf-archive-* && \
+    ./configure --prefix=/usr && \
+    make install && \
+    cd .. && \
+    rm -frv autoconf-archive-* && \
+    curl https://github.com/edenhill/librdkafka/archive/v0.11.3.tar.gz \
+        -L --output librdkafka.tar.gz && \
+    tar xzvf librdkafka.tar.gz && \
+    cd librdkafka-* && \
+    ./configure --prefix=/usr && make && make install && \
+    cd .. && \
+    rm -frv librdkafka-*
+
+ENTRYPOINT ["/bin/bash","/buildfiles/entrypoint.sh","rhel"]

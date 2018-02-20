@@ -1,0 +1,64 @@
+FROM centos:7
+MAINTAINER ATSD Developers <dev-atsd@axibase.com>
+ENV version 5.7.2
+#metadata
+LABEL com.axibase.vendor="Axibase Corporation" \
+      com.axibase.product="Collectd with write_atsd plugin builder"
+
+RUN yum -y install epel-release && \
+    yum -y install              \
+        which                   \
+        make                    \
+        flex                    \
+        bison                   \
+        pkgconfig               \
+        libtool                 \
+        git                     \
+        rpm-build               \
+        libgcrypt-devel         \
+        libtool-ltdl-devel      \
+        libcap-devel            \
+        curl-devel              \
+        libxml2-devel           \
+        yajl-devel              \
+        libdbi-devel            \
+        libudev-devel           \
+        libpcap-devel           \
+        OpenIPMI-devel          \
+        iptables-devel          \
+        java-devel              \
+        jpackage-utils          \
+        lvm2-devel              \
+        mysql-devel             \
+        libmnl-devel            \
+        iproute-devel           \
+        libnotify-devel         \
+        gtk2-devel              \
+        libesmtp-devel          \
+        openldap-devel          \
+        perl-ExtUtils-Embed     \
+        protobuf-c-devel        \
+        postgresql-devel        \
+        python-devel            \
+        rrdtool-devel           \
+        lm_sensors-devel        \
+        libatasmart-devel       \
+        net-snmp-devel          \
+        libvirt-devel           \
+        xfsprogs-devel          \
+        librabbitmq-devel       \
+        ganglia-devel           \
+        gpsd-devel              \
+        lua-devel               \
+        libmemcached-devel      \
+        libmodbus-devel         \
+        mosquitto-devel         \
+        nut-devel               \
+        liboping-devel          \
+        hiredis-devel           \
+        varnish-libs-devel      \
+        libmicrohttpd-devel     \
+        librdkafka-devel        \
+        riemann-c-client-devel
+
+ENTRYPOINT ["/bin/bash","/buildfiles/entrypoint.sh","rhel"]

@@ -1,0 +1,49 @@
+From 6c2eb3ad28f08f7e774b6eaea5ae01b0857cf884 Mon Sep 17 00:00:00 2001
+From: Pavel Rochnyack <pavel2000@ngs.ru>
+Date: Sat, 10 Feb 2018 09:20:41 +0000
+Subject: [PATCH] write_kafka: 'rd_kafka_errno2err' is deprecated, fix failed
+ builds
+
+Since librdkafka-0.11.0 applications should use rd_kafka_last_error()
+to retrieve the error code from the legacy APIs.
+
+Thanks to hikdo.
+
+Closes: #2607
+Closes: #2628
+Closes: #2640
+---
+ src/write_kafka.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/write_kafka.c b/src/write_kafka.c
+index 306d92cc..17a83e0e 100644
+--- a/src/write_kafka.c
++++ b/src/write_kafka.c
+@@ -77,6 +77,14 @@ static void kafka_log(const rd_kafka_t *rkt, int level, const char *fac,
+ }
+ #endif
+ 
++static rd_kafka_resp_err_t kafka_error() {
++#if RD_KAFKA_VERSION >= 0x000b00ff
++  return rd_kafka_last_error();
++#else
++  return rd_kafka_errno2err(errno);
++#endif
++}
++
+ static uint32_t kafka_hash(const char *keydata, size_t keylen) {
+   uint32_t hash = 5381;
+   for (; keylen > 0; keylen--)
+@@ -147,7 +155,7 @@ static int kafka_handle(struct kafka_topic_context *ctx) /* {{{ */
+     if ((ctx->topic = rd_kafka_topic_new(ctx->kafka, ctx->topic_name,
+                                          topic_conf)) == NULL) {
+       ERROR("write_kafka plugin: cannot create topic : %s\n",
+-            rd_kafka_err2str(rd_kafka_errno2err(errno)));
++            rd_kafka_err2str(kafka_error()));
+       return errno;
+     }
+ 
+-- 
+2.14.1
+
