@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-ENV atsd_version=18896 collector_version=18887 LANG=en_US.UTF-8
+ENV version=latest LANG=en_US.UTF-8
 
 # metadata
 LABEL com.axibase.maintainer="ATSD Developers <dev-atsd@axibase.com>" \
@@ -29,7 +29,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
   && unzip /opt/axibase-collector/lib/axibase-collector.war -d /opt/axibase-collector/exploded/webapp \
   && /tmp/preinit.sh
 
-# jmx, network commands(tcp), network commands(udp), graphite pickle, UI/api http, UI/api https
+# jmx, network commands(tcp), network commands(udp), graphite pickle, UI/api http, UI/api https, Collector https
 EXPOSE 1099 8081 8082/udp 8084 8088 8443 9443
 
 VOLUME ["/opt/atsd", "/opt/axibase-collector"]
