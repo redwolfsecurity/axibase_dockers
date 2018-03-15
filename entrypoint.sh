@@ -42,7 +42,7 @@ function start_atsd {
     }
 
     function configure_phantom {
-        curl -u "$ATSD_ADMIN_USER_NAME":"$ATSD_ADMIN_USER_PASSWORD" --data \
+        curl -s -u "$ATSD_ADMIN_USER_NAME":"$ATSD_ADMIN_USER_PASSWORD" --data \
             "options%5B0%5D.key=webdriver.phantomjs.path&options%5B0%5D.value=%2Fopt%2Fatsd%2Fphantomjs-2.1.1-linux-x86_64%2Fbin%2Fphantomjs&apply=Save" \
             http://127.0.0.1:8088/admin/serverproperties
     }
@@ -51,15 +51,18 @@ function start_atsd {
         if [ -n "$ATSD_IMPORT_PATH" ]; then
             tmp_path="/tmp/import-backup"
             mkdir "$tmp_path"
-            if [[ "$ATSD_IMPORT_PATH" =~ (ftp|https?)://.* ]]; then
-                wget -P "$tmp_path" "$ATSD_IMPORT_PATH"
-            elif [[ "$ATSD_IMPORT_PATH" =~ /.* ]]; then
-                cp -v "$ATSD_IMPORT_PATH" "$tmp_path"
-            fi
-            tmp_file="$tmp_path"/$(ls -1 $tmp_path)
-            echo "Saved to $tmp_path"
-            curl -u "$ATSD_ADMIN_USER_NAME:$ATSD_ADMIN_USER_PASSWORD" \
-                -F "files=@$tmp_file" http://127.0.0.1:8088/admin/import-backup
+            for current_path in ${ATSD_IMPORT_PATH//,/ }; do
+                echo "[ATSD] Importing $current_path"
+                if [[ "$current_path" =~ (ftp|https?)://.* ]]; then
+                    wget -P "$tmp_path" "$current_path"
+                elif [[ "$current_path" =~ /.* ]]; then
+                    cp "$current_path" "$tmp_path"
+                fi
+                tmp_file="$tmp_path"/$(ls -1 $tmp_path)
+                curl -s -u "$ATSD_ADMIN_USER_NAME:$ATSD_ADMIN_USER_PASSWORD" \
+                    -F "files=@$tmp_file" http://127.0.0.1:8088/admin/import-backup
+                rm -fr "$tmp_path"/*
+            done
             rm -fr "$tmp_path"
         fi
     }
@@ -146,7 +149,7 @@ function start_collector {
 
 function start_collectd {
     echo "Starting collectd ..."
-    /usr/sbin/collectd
+    /usr/sbin/collectd > /dev/null
     COLLECTD_PID=$!
 }
 
@@ -195,6 +198,7 @@ start_collectd
 if [ -f /first-start ]; then
     rm /first-start
 fi
+echo '*** All sandbox applications started ***'
 wait_loop
 echo "SIGTERM received ( docker stop ). Stopping services ..." | tee -a $LOGFILESTOP
 stop_services
