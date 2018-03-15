@@ -48,13 +48,13 @@ function start_atsd {
     }
 
     function import_backup {
-        if [ -n "$IMPORT_PATH" ]; then
+        if [ -n "$ATSD_IMPORT_PATH" ]; then
             tmp_path="/tmp/import-backup"
             mkdir "$tmp_path"
-            if [[ "$IMPORT_PATH" =~ (ftp|https?)://.* ]]; then
-                wget -P "$tmp_path" "$IMPORT_PATH"
-            elif [[ "$IMPORT_PATH" =~ /.* ]]; then
-                cp -v "$IMPORT_PATH" "$tmp_path"
+            if [[ "$ATSD_IMPORT_PATH" =~ (ftp|https?)://.* ]]; then
+                wget -P "$tmp_path" "$ATSD_IMPORT_PATH"
+            elif [[ "$ATSD_IMPORT_PATH" =~ /.* ]]; then
+                cp -v "$ATSD_IMPORT_PATH" "$tmp_path"
             fi
             tmp_file="$tmp_path"/$(ls -1 $tmp_path)
             echo "Saved to $tmp_path"
@@ -126,10 +126,14 @@ function start_collector {
     validate_docker_socket
     start_cron
 
-    #Start collector
-    ./start-collector.sh -atsd-url="https://${ATSD_COLLECTOR_USER_NAME}:${ATSD_COLLECTOR_USER_PASSWORD}@localhost:8443" -job-enable=docker-socket
+    if [ -f /first-start ] && [ -n "$COLLECTOR_IMPORT_PATH" ]; then
+        JOB_PATH=-job-path="$COLLECTOR_IMPORT_PATH"
+    fi
 
-     if [ -f /first-start ]; then
+    #Start collector
+    ./start-collector.sh -atsd-url="https://${ATSD_COLLECTOR_USER_NAME}:${ATSD_COLLECTOR_USER_PASSWORD}@localhost:8443" -job-enable=docker-socket "$JOB_PATH"
+
+    if [ -f /first-start ]; then
         if curl -i -s --insecure --data \
             "user.username=$COLLECTOR_USER_NAME&newPassword=$COLLECTOR_USER_PASSWORD&confirmedPassword=$COLLECTOR_USER_PASSWORD&commit=Save" \
             https://127.0.0.1:9443/register.xhtml | grep -q "302"; then
