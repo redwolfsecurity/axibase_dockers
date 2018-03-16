@@ -10,6 +10,9 @@ LOGFILESTART="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
 LOGFILESTOP="`readlink -f ${DISTR_HOME}/atsd/logs/stop.log`"
 ZOOKEEPER_DATA_DIR="${DISTR_HOME}/hbase/zookeeper"
 
+IMPORT_DIR="/import"
+TMP_DOWNLOAD_DIR="/tmp/import-download"
+
 ATSD_ADMIN_USER_NAME=axibase
 ATSD_ADMIN_USER_PASSWORD=axibase
 
@@ -18,6 +21,45 @@ ATSD_COLLECTOR_USER_PASSWORD=collector
 
 COLLECTOR_USER_NAME=axibase
 COLLECTOR_USER_PASSWORD=axibase
+
+collector_import_arg=
+
+
+function generic_import {
+    function import_file_into_atsd {
+        local file_path=$1
+        curl -s -u "$ATSD_ADMIN_USER_NAME:$ATSD_ADMIN_USER_PASSWORD" \
+             -F "files=@$file_path" http://127.0.0.1:8088/admin/import-backup
+    }
+
+    function update_collector_argument {
+        local import_path=$1
+        if [ -n "$collector_import_arg" ]; then
+            collector_import_arg="$collector_import_arg",
+        fi
+        collector_import_arg="$collector_import_arg$import_path"
+    }
+
+    local import_spec=$1
+    local import_func=$2
+    mkdir -p "$IMPORT_DIR"
+    mkdir -p "$TMP_DOWNLOAD_DIR"
+    for current_path in ${import_spec//,/ }; do
+        local import_path
+        echo "Importing $current_path"
+        if [[ "$current_path" =~ (ftp|https?)://.* ]]; then
+            wget -P "$TMP_DOWNLOAD_DIR" "$current_path"
+            local file_name=$(ls -1 "$TMP_DOWNLOAD_DIR")
+            import_path="$IMPORT_DIR"/${file_name%\?*}
+            mv "$TMP_DOWNLOAD_DIR"/"$file_name" "$import_path"
+        else
+            import_path="$IMPORT_DIR"/"$current_path"
+        fi
+        ${import_func} "$import_path"
+    done
+    rm -rf "$TMP_DOWNLOAD_DIR"
+}
+
 
 function start_atsd {
     function set_tz {
@@ -35,9 +77,9 @@ function start_atsd {
         local description=$4
         if curl -i -s --data "userBean.username=$user&userBean.password=$pass&repeatPassword=$pass" \
             http://127.0.0.1:8088/login${params} | grep -q "302"; then
-            echo "[ATSD] $4 account '$user' created." | tee -a  $LOGFILESTART
+            echo "[ATSD] $description account '$user' created." | tee -a  $LOGFILESTART
         else
-            echo "[ATSD] Failed to create $4 account '$ATSD_COLLECTOR_USER_NAME'." | tee -a  $LOGFILESTART
+            echo "[ATSD] Failed to create $description account '$ATSD_COLLECTOR_USER_NAME'." | tee -a  $LOGFILESTART
         fi
     }
 
@@ -45,26 +87,6 @@ function start_atsd {
         curl -s -u "$ATSD_ADMIN_USER_NAME":"$ATSD_ADMIN_USER_PASSWORD" --data \
             "options%5B0%5D.key=webdriver.phantomjs.path&options%5B0%5D.value=%2Fopt%2Fatsd%2Fphantomjs-2.1.1-linux-x86_64%2Fbin%2Fphantomjs&apply=Save" \
             http://127.0.0.1:8088/admin/serverproperties
-    }
-
-    function import_backup {
-        if [ -n "$ATSD_IMPORT_PATH" ]; then
-            tmp_path="/tmp/import-backup"
-            mkdir "$tmp_path"
-            for current_path in ${ATSD_IMPORT_PATH//,/ }; do
-                echo "[ATSD] Importing $current_path"
-                if [[ "$current_path" =~ (ftp|https?)://.* ]]; then
-                    wget -P "$tmp_path" "$current_path"
-                elif [[ "$current_path" =~ /.* ]]; then
-                    cp "$current_path" "$tmp_path"
-                fi
-                tmp_file="$tmp_path"/$(ls -1 $tmp_path)
-                curl -s -u "$ATSD_ADMIN_USER_NAME:$ATSD_ADMIN_USER_PASSWORD" \
-                    -F "files=@$tmp_file" http://127.0.0.1:8088/admin/import-backup
-                rm -fr "$tmp_path"/*
-            done
-            rm -fr "$tmp_path"
-        fi
     }
 
     su axibase ${ATSD_ALL} start
@@ -76,9 +98,9 @@ function start_atsd {
     if [ -f /first-start ]; then
         set_tz
         create_account "$ATSD_COLLECTOR_USER_NAME" "$ATSD_COLLECTOR_USER_PASSWORD" "?type=writer" "Collector"
-        create_account "$ATSD_ADMIN_USER_NAME" "$ATSD_ADMIN_USER_PASSWORD" "" "Admininstrator"
+        create_account "$ATSD_ADMIN_USER_NAME" "$ATSD_ADMIN_USER_PASSWORD" "" "Administrator"
         configure_phantom
-        import_backup
+        generic_import "$ATSD_IMPORT_PATH" import_file_into_atsd
     fi
 }
 
@@ -126,25 +148,50 @@ function start_collector {
         cron -f &
     }
 
+    function update_import_configs {
+        if [ -n "$EDIT_CONFIGS" ]; then
+            local edits="${EDIT_CONFIGS//;/ }"
+            for edit in ${edits}; do
+                local parameter_edits=(${edit//,/ })
+                local file_to_edit=${parameter_edits[@]:0:1}
+                echo "Updating file $file_to_edit for import"
+                for param_edit in ${parameter_edits[@]:1}; do
+                    local key=${param_edit%=*}
+                    local value=${param_edit#*=}
+                    sed -i "/$key/s/>.*</>$value</" "$IMPORT_DIR"/"$file_to_edit"
+                    if [ "$key" = password ]; then
+                        sed -i "s/<password>/<password encrypted=\"false\">/" "$IMPORT_DIR"/"$file_to_edit"
+                    fi
+                done
+            done
+        fi
+    }
+
+    function create_collector_account {
+        if [ -f /first-start ]; then
+            if curl -i -s --insecure --data \
+                "user.username=$COLLECTOR_USER_NAME&newPassword=$COLLECTOR_USER_PASSWORD&confirmedPassword=$COLLECTOR_USER_PASSWORD&commit=Save" \
+                https://127.0.0.1:9443/register.xhtml | grep -q "302"; then
+                echo "[Collector] Account '$COLLECTOR_USER_NAME' created." | tee -a  $LOGFILESTART
+            else
+                echo "[Collector] Failed to create account '$COLLECTOR_USER_NAME'." | tee -a  $LOGFILESTART
+            fi
+        fi
+    }
+
     validate_docker_socket
     start_cron
-
     if [ -f /first-start ] && [ -n "$COLLECTOR_IMPORT_PATH" ]; then
-        JOB_PATH=-job-path="$COLLECTOR_IMPORT_PATH"
+        generic_import "$COLLECTOR_IMPORT_PATH" update_collector_argument
+        JOB_PATH=-job-path="$collector_import_arg"
     fi
-
+    update_import_configs
     #Start collector
-    ./start-collector.sh -atsd-url="https://${ATSD_COLLECTOR_USER_NAME}:${ATSD_COLLECTOR_USER_PASSWORD}@localhost:8443" -job-enable=docker-socket "$JOB_PATH"
-
-    if [ -f /first-start ]; then
-        if curl -i -s --insecure --data \
-            "user.username=$COLLECTOR_USER_NAME&newPassword=$COLLECTOR_USER_PASSWORD&confirmedPassword=$COLLECTOR_USER_PASSWORD&commit=Save" \
-            https://127.0.0.1:9443/register.xhtml | grep -q "302"; then
-            echo "[Collector] Account '$COLLECTOR_USER_NAME' created." | tee -a  $LOGFILESTART
-        else
-            echo "[Collector] Failed to create account '$COLLECTOR_USER_NAME'." | tee -a  $LOGFILESTART
-        fi
-    fi
+    ./start-collector.sh \
+        -atsd-url="https://${ATSD_COLLECTOR_USER_NAME}:${ATSD_COLLECTOR_USER_PASSWORD}@localhost:8443" \
+        -job-enable=docker-socket \
+        "$JOB_PATH"
+    create_collector_account
 }
 
 function start_collectd {
@@ -198,7 +245,7 @@ start_collectd
 if [ -f /first-start ]; then
     rm /first-start
 fi
-echo '*** All sandbox applications started ***'
+echo 'All applications started'
 wait_loop
 echo "SIGTERM received ( docker stop ). Stopping services ..." | tee -a $LOGFILESTOP
 stop_services
