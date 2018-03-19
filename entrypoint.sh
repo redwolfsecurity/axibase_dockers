@@ -188,8 +188,9 @@ function start_atsd {
     function import_files_into_atsd {
         for file_path in ${atsd_import_list}; do
             echo "[ATSD] Importing '$file_path' configuration"
+            # TODO check import error
             curl -i -s -u "$ATSD_ADMIN_USER_NAME:$ATSD_ADMIN_USER_PASSWORD" \
-                 -F "files=@$file_path" http://127.0.0.1:8088/admin/import-backup
+                 -F "files=@$file_path" -F "autoEnable=on" http://127.0.0.1:8088/admin/import-backup
         done
     }
 
