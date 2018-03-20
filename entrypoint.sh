@@ -108,6 +108,32 @@ function prepare_import {
         rm -rf "$TMP_DOWNLOAD_DIR"
     }
 
+    function update_entry {
+        local file_path=$1
+        local file_to_edit=$2
+        local key=$3
+        local right_side=$4
+        if ! grep -qE "<$key( [^>]*)?>" "$file_path"; then
+            echo "WARNING: Tag '$key' not found in '$file_to_edit'"
+            continue
+        fi
+        local value=$(sed_escape $(xml_escape "$right_side"))
+        sed -i "/<$key.*>.*<\/$key>/s/>.*</>$value</" "$file_path"
+        if [ "$key" = password ]; then
+            sed -i "s/<password/& encrypted=\"false\"/" "$file_path"
+        fi
+    }
+
+    function update_from_file {
+        local file_path=$1
+        local file_to_edit=$2
+        local file_with_updates=$3
+        cat "$file_with_updates" | while read edit_line; do
+            local edit_line_key=${edit_line%%=*}
+            local edit_line_value=${edit_line#*=}
+            update_entry "$file_path" "$file_to_edit" "$edit_line_key" "$edit_line_value"
+        done
+    }
 
     function update_import_configs {
         if [ -n "$COLLECTOR_CONFIG" ]; then
@@ -124,14 +150,11 @@ function prepare_import {
                 local parameter_edits=$(split_by , "${file_edit#*:}")
                 for parameter_edit in ${parameter_edits}; do
                     local key=${parameter_edit%%=*}
-                    if ! grep -qE "<$key( [^>]*)?>" "$file_path"; then
-                        echo "WARNING: Tag '$key' not found in '$file_to_edit'"
-                        continue
-                    fi
-                    local value=$(sed_escape $(xml_escape ${parameter_edit#*=}))
-                    sed -i "/<$key.*>.*<\/$key>/s/>.*</>$value</" "$file_path"
-                    if [ "$key" = password ]; then
-                        sed -i "s/<password/& encrypted=\"false\"/" "$file_path"
+                    local right_side=${parameter_edit#*=}
+                    if [ "$key" == "$right_side" ]; then
+                        update_from_file "$file_path" "$file_to_edit" "$key"
+                    else
+                        update_entry "$file_path" "$file_to_edit" "$key" "$right_side"
                     fi
                 done
             done
