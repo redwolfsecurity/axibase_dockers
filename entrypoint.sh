@@ -100,8 +100,19 @@ function prepare_import {
                 local file_name=$(ls -1 "$TMP_DOWNLOAD_DIR")
                 import_path="$IMPORT_DIR"/${file_name%\?*}
                 mv "$TMP_DOWNLOAD_DIR"/"$file_name" "$import_path"
+            elif [[ "$current_path" =~ /.* ]]; then
+                if [[ ! -f "$current_path" ]]; then
+                    echo "ERROR: File '$current_path' doesn't exist"
+                    exit 1
+                fi
+                cp "$current_path" "$IMPORT_DIR"
+                import_path="$IMPORT_DIR"/$(basename "$current_path")
             else
                 import_path="$IMPORT_DIR"/"$current_path"
+                if [[ ! -f "$import_path" ]]; then
+                    echo "ERROR: File '$import_path' doesn't exist"
+                    exit 1
+                fi
             fi
             ${import_func} "$import_path"
         done
