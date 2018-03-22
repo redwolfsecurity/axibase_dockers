@@ -25,13 +25,13 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 
 Parameters for the container are specified via environment variables.
 
-| Variable Name | Format | Description |
-|------------------|---------|-------------|
-| `ATSD_IMPORT_PATH` | `location_1,location_2,...,location_N` | Comma-separated locations of configuration files for ATSD. Each location can be either a file within the container file system or URL |
-| `COLLECTOR_IMPORT_PATH` | `location_1,location_2,...,location_N` | Comma-separated locations of configuration files for Collector. Each location can be either a file within the container file system or URL |
-| `COLLECTOR_CONFIG` | `file_1:update_1_1,update_1_2;...;update_K:update_K_1,update_K_2,...,update_K_N` | Specifies how ot update Collector configuration files before import. See below for detailed description |
+| Variable Name | Description |
+|------------------|-------------|
+| `ATSD_IMPORT_PATH` | Comma-separated locations of configuration files for ATSD. Each location can be either a file within the container file system or URL. |
+| `COLLECTOR_IMPORT_PATH` | Comma-separated locations of configuration files for Collector. Each location can be either a file within the container file system or URL. |
+| `COLLECTOR_CONFIG` | Specifies how ot update Collector configuration files before import. |
 
-Each location specified in `ATSD_IMPORT_PATH` or `COLLECTOR_IMPORT_PATH` can be:
+`ATSD_IMPORT_PATH` and `COLLECTOR_IMPORT_PATH` has `location_1,location_2,...,location_N` format. Each location specified in `ATSD_IMPORT_PATH` or `COLLECTOR_IMPORT_PATH` can be:
 
 1. URL address of the configuration file or archive
    ```sh
