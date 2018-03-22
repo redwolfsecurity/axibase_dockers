@@ -13,7 +13,9 @@ HTTP_FOUND_CODE=302
 WGET_SUCCESS_CODE=0
 WGET_NETWORK_FAILURE_CODE=4
 
+FIRST_START_MARKER="/first-start"
 IMPORT_DIR="/import"
+TMP_IMPORT_DIR="/tmp/import"
 TMP_DOWNLOAD_DIR="/tmp/import-download"
 DOCKER_SOCKET="/var/run/docker.sock"
 
@@ -28,6 +30,7 @@ COLLECTOR_USER_PASSWORD=axibase
 
 atsd_import_list=
 collector_import_arg=
+collector_execute_arg=
 
 function split_by {
     local split_character=$1
@@ -49,7 +52,22 @@ function sed_escape {
     echo "$str_to_escape" | sed 's:[\/&]:\\&:g'
 }
 
+function concat_with {
+    local left=$1
+    local separator=$2
+    local right=$3
+    if [ -n "$left" ]; then
+        echo -n "$left$separator"
+    fi
+    echo "$right"
+}
+
 function prepare_import {
+    function extract_job_name {
+        local file_path=$1
+        sed -n '/<com.axibase.collector.model.job.json.JsonJobConfig/{n;s/.*<name>\(.*\)<\/name>.*/\1/p}' "$file_path"
+    }
+
     function prepare_import_by_spec {
         function update_atsd_import_list {
             local import_path=$1
@@ -58,10 +76,9 @@ function prepare_import {
 
         function update_collector_argument {
             local import_path=$1
-            if [ -n "$collector_import_arg" ]; then
-                collector_import_arg="$collector_import_arg",
-            fi
-            collector_import_arg="$collector_import_arg$import_path"
+            local job_name=$(extract_job_name "$import_path")
+            collector_import_arg=$(concat_with "$collector_import_arg" , "$import_path")
+            collector_execute_arg=$(concat_with "$collector_execute_arg" , "$job_name")
         }
 
         function download_or_fail {
@@ -92,27 +109,30 @@ function prepare_import {
         local import_spec=$1
         local import_func=$2
         mkdir -p "$IMPORT_DIR"
+        mkdir -p "$TMP_IMPORT_DIR"
         mkdir -p "$TMP_DOWNLOAD_DIR"
         for current_path in ${import_spec//,/ }; do
             local import_path
             if [[ "$current_path" =~ (ftp|https?)://.* ]]; then
                 download_or_fail "$current_path"
                 local file_name=$(ls -1 "$TMP_DOWNLOAD_DIR")
-                import_path="$IMPORT_DIR"/${file_name%\?*}
+                import_path="$TMP_IMPORT_DIR"/${file_name%\?*}
                 mv "$TMP_DOWNLOAD_DIR"/"$file_name" "$import_path"
             elif [[ "$current_path" =~ /.* ]]; then
                 if [[ ! -f "$current_path" ]]; then
                     echo "ERROR: File '$current_path' doesn't exist"
                     exit 1
                 fi
-                cp "$current_path" "$IMPORT_DIR"
-                import_path="$IMPORT_DIR"/$(basename "$current_path")
+                cp "$current_path" "$TMP_IMPORT_DIR"
+                import_path="$TMP_IMPORT_DIR"/$(basename "$current_path")
             else
-                import_path="$IMPORT_DIR"/"$current_path"
-                if [[ ! -f "$import_path" ]]; then
-                    echo "ERROR: File '$import_path' doesn't exist"
+                local source_path="$IMPORT_DIR"/"$current_path"
+                import_path="$TMP_IMPORT_DIR"/"$current_path"
+                if [[ ! -f "$source_path" ]]; then
+                    echo "ERROR: File '$source_path' doesn't exist"
                     exit 1
                 fi
+                cp "$source_path" "$import_path"
             fi
             ${import_func} "$import_path"
         done
@@ -151,11 +171,11 @@ function prepare_import {
             local file_edits=$(split_by \; "$COLLECTOR_CONFIG")
             for file_edit in ${file_edits}; do
                 local file_to_edit=${file_edit%%:*}
-                local file_path="$IMPORT_DIR"/"$file_to_edit"
+                local file_path="$TMP_IMPORT_DIR"/"$file_to_edit"
                 if [ -f "$file_path" ]; then
                     echo "Updating file '$file_to_edit' for import"
                 else
-                    echo "WARNING: File '$file_to_edit' doesn't exist"
+                    echo "WARNING: Can't update '$file_to_edit', file doesn't exist"
                     continue
                 fi
                 local parameter_edits=$(split_by , "${file_edit#*:}")
@@ -172,7 +192,7 @@ function prepare_import {
         fi
     }
 
-    if [ -f /first-start ]; then
+    if [ -f "$FIRST_START_MARKER" ]; then
         if [ -n "$ATSD_IMPORT_PATH" ]; then
             prepare_import_by_spec "$ATSD_IMPORT_PATH" update_atsd_import_list
         fi
@@ -232,9 +252,10 @@ function start_atsd {
 
     if [ $? -eq 1 ]; then
         echo "[ATSD] Failed to start ATSD. Check $LOGFILESTART file." | tee -a $LOGFILESTART
+        exit 1
     fi
 
-    if [ -f /first-start ]; then
+    if [ -f "$FIRST_START_MARKER" ]; then
         set_tz
         create_account "$ATSD_COLLECTOR_USER_NAME" "$ATSD_COLLECTOR_USER_PASSWORD" "?type=writer" "Collector"
         create_account "$ATSD_ADMIN_USER_NAME" "$ATSD_ADMIN_USER_PASSWORD" "" "Administrator"
@@ -281,7 +302,7 @@ function start_collector {
     }
 
     function create_collector_account {
-        if [ -f /first-start ]; then
+        if [ -f "$FIRST_START_MARKER" ]; then
             if curl -i -s --insecure \
                 --data-urlencode "user.username=$COLLECTOR_USER_NAME" \
                 --data-urlencode "newPassword=$COLLECTOR_USER_PASSWORD" \
@@ -298,19 +319,30 @@ function start_collector {
     if [ -e "$DOCKER_SOCKET" ]; then
         validate_docker_socket
         JOB_ENABLE=-job-enable=docker-socket
+        collector_execute_arg=$(concat_with "$collector_execute_arg" , docker-socket)
     fi
     start_cron
 
+    if [ -n "$collector_execute_arg" ]; then
+        JOB_EXECUTE=-job-execute="$collector_execute_arg"
+    fi
+
     #Start collector
-    ./start-collector.sh \
+    ./start-collector.sh wait-exec \
         -atsd-url="https://${ATSD_COLLECTOR_USER_NAME}:${ATSD_COLLECTOR_USER_PASSWORD}@localhost:8443" \
-        "$JOB_ENABLE" "$JOB_PATH"
+        "$JOB_ENABLE" "$JOB_PATH" "$JOB_EXECUTE"
+
+    if [ $? -eq 1 ]; then
+        echo "[Collector] Failed to start Collector."
+        exit 1
+    fi
+
     create_collector_account
 }
 
 function start_collectd {
     echo "Starting collectd ..."
-    /usr/sbin/collectd &> /dev/null
+    /usr/sbin/collectd
     COLLECTD_PID=$!
 }
 
@@ -355,10 +387,10 @@ function wait_loop {
 
 prepare_import
 start_atsd
-start_collector
 start_collectd
-if [ -f /first-start ]; then
-    rm /first-start
+start_collector
+if [ -f "$FIRST_START_MARKER" ]; then
+    rm "$FIRST_START_MARKER"
 fi
 echo 'All applications started'
 wait_loop
