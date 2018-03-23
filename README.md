@@ -23,17 +23,17 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 
 ## Container Parameters
 
-Parameters for the container are specified via environment variables.
-
 | Variable Name | Description |
 |------------------|-------------|
-| `ATSD_IMPORT_PATH` | Comma-separated locations of configuration files for ATSD. Each location can be either a file within the container file system or URL. |
-| `COLLECTOR_IMPORT_PATH` | Comma-separated locations of configuration files for Collector. Each location can be either a file within the container file system or URL. |
-| `COLLECTOR_CONFIG` | Specifies how ot update Collector configuration files before import. |
+| `ATSD_IMPORT_PATH` | Comma-separated paths to files imported into **ATSD**. Path can refer to a file on the mounted file system or to a URL from which the file will be downloaded. |
+| `COLLECTOR_IMPORT_PATH` | Comma-separated paths to files imported into **Collector**. Path can refer to a file on the mounted file system or to a URL from which the file will be downloaded. |
+| `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
 
-`ATSD_IMPORT_PATH` and `COLLECTOR_IMPORT_PATH` has `location_1,location_2,...,location_N` format. Each location specified in `ATSD_IMPORT_PATH` or `COLLECTOR_IMPORT_PATH` can be:
+### File Import Parameters
 
-1. URL address of the configuration file or archive
+`_IMPORT_PATH` parameters must be specified using the following format: `path_1,path_2,...,path_N` where each path can refer to:
+
+1. **URL address** of the `xml` configuration file or `zip/tar.gz` archive:
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -42,7 +42,7 @@ Parameters for the container are specified via environment variables.
      --env COLLECTOR_IMPORT_PATH='https://example.com/marathon-jobs.xml' \
      axibase/atsd-sandbox:latest
    ```
-2. Absolute path on the container file system to configuration file or archive
+2. **Absolute path** on the container file system to the `xml` configuration file or `zip/tar.gz` archive:
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -53,7 +53,7 @@ Parameters for the container are specified via environment variables.
      --env COLLECTOR_IMPORT_PATH='/marathon-jobs.xml' \
      axibase/atsd-sandbox:latest
    ```
-3. The relative path to the configuration file (archive). In this case the file should be located in the `/import` directory on the container file system.
+3. **Relative path** to the the `xml` configuration file or `zip/tar.gz` archive. In this case the file should be placed in the `/import` directory on the container file system.
     ```sh
     mkdir /home/user/import
     cp atsd-marathon-xml.zip /home/user/import
@@ -67,15 +67,16 @@ Parameters for the container are specified via environment variables.
       axibase/atsd-sandbox:latest
    ```
 
-`COLLECTOR_CONFIG` is the semicolon-separated sequence of instructions to edit configuration files for Collector. Each instruction has the form `file-name.xml:updates`.
-`updates` is the comma-separated sequence of individual updates applied to the configuration file. Each update can be:
+### Job Configuration Parameters
 
-1. A path to a file on the container file system, that contains `key=value` lines
+`COLLECTOR_CONFIG` is the semicolon-separated sequence of instructions to edit configuration files imported into Collector. 
+
+Each instruction should be specified in the format `file_name.xml:/path/to/properties_file` or `file_name.xml:key1=value1,key2=value2` and will cause the attributes in the XML file to be updated with new values prior to importing the file into Collector.
+
+Instructions can be specified as follows:
+
+1. A path to a file on the container file system, that contains `key=value` lines:
    ```sh
-   cat /home/user/aws.conf
-   accessKeyId=key
-   secretAccessKey=secret
-
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
      --volume /home/user/aws.conf:/aws.conf \
@@ -84,12 +85,15 @@ Parameters for the container are specified via environment variables.
      --env COLLECTOR_CONFIG="job_aws_aws-route53.xml:/aws.conf" \
    axibase/atsd-sandbox:latest
    ```
-2. Same as previous, but the file is located in `/import` directory, and path to this file is relative
    ```sh
-   cat /home/user/import/aws.conf
+   cat /home/user/aws.conf
+   ```
+   ```ls
    accessKeyId=key
    secretAccessKey=secret
-
+   ```  
+2. Same as previous, but the file is located in `/import` directory, and path to this file is relative:
+   ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
      --volume /home/user/import:/import \
@@ -98,7 +102,14 @@ Parameters for the container are specified via environment variables.
      --env COLLECTOR_CONFIG="job_aws_aws-route53.xml:aws.conf" \
      axibase/atsd-sandbox:latest
    ```
-3. Just a key-value pair in `key=value` format
+   ```sh
+   cat /home/user/import/aws.conf
+   ```
+   ```ls
+   accessKeyId=key
+   secretAccessKey=secret
+   ```  
+3. A key-value pair in `key=value` format:
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -109,18 +120,32 @@ Parameters for the container are specified via environment variables.
      axibase/atsd-sandbox:latest
    ```
 
-Updates `key=new_value` mean substituting or replacing the `key` XML-tag content with `new_value`:
+The XML file update involves replacement of XML tag values, identified with `key`, with new values, for example:
+
+  ```
+  --env COLLECTOR_CONFIG='marathon-jobs.xml:server=mar1.example.com,userName=netops,password=1234456'
+  ```
 
 - Before
-  ```
-  <key>some_content</key>
+  ```xml
+  <server>marathon_hostname</server>
+  <port>8080</port>
+  <userName>axibase</userName>
+  <password></password>
   ```
 - After
+  ```xml
+  <server>mar1.example.com</server>
+  <port>8080</port>
+  <userName>netops</userName>
+  <password>1234456</password>  
   ```
-  <key>new_value</key>
-  ```
+  
+### Parameter Syntax
 
-`ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLECTOR_CONFIG` must not contain space characters. Semicolons and commas in file names, URLs, key and values must be escaped by `\` character, according to the table
+The variables must not contain whitespace characters.
+
+Semicolons and commas in file names, URLs, key and values must be escaped by `\` character as specified below:
 
 | Variable | Escaping |
 |----------|----------|
@@ -132,9 +157,9 @@ Updates `key=new_value` mean substituting or replacing the `key` XML-tag content
    ... --env COLLECTOR_CONFIG='config.xml:password=password\,with\;separators' ...
    ```
 
-Additional escaping might be required; this depends on the shell type and version.
+Additional escaping might be required depending on the shell type and version.
 
-> Note: bind-mounted files or directories, i.e. `--volume /file-or-directory-path:...`, should not be removed or renamed between container restarts.
+> Note: files or directories mounted into the container, i.e. `--volume /home/user/import:/import`, should not be removed or renamed between container restarts.
 
 ## Explore
 
