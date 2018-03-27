@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-ENV version=latest LANG=en_US.UTF-8
+ENV version=latest LANG=en_US.UTF-8 DEPLOYMENT_TYPE=sandbox
 
 # metadata
 LABEL com.axibase.maintainer="ATSD Developers <dev-atsd@axibase.com>" \
