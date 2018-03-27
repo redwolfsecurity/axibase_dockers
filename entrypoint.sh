@@ -9,7 +9,7 @@ LOGFILESTART="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
 LOGFILESTOP="`readlink -f ${DISTR_HOME}/atsd/logs/stop.log`"
 ZOOKEEPER_DATA_DIR="${DISTR_HOME}/hbase/zookeeper"
 
-HTTP_FOUND_CODE=302
+HTTP_FOUND_CODE="302 Found"
 WGET_SUCCESS_CODE=0
 WGET_NETWORK_FAILURE_CODE=4
 
@@ -222,7 +222,7 @@ function start_atsd {
             --data-urlencode "userBean.username=$user" \
             --data-urlencode "userBean.password=$pass" \
             --data-urlencode "repeatPassword=$pass" \
-            http://127.0.0.1:8088/login${params} | grep -q ${HTTP_FOUND_CODE}; then
+            http://127.0.0.1:8088/login${params} | grep -q "$HTTP_FOUND_CODE"; then
             echo "[ATSD] $description account '$user' created." | tee -a  $LOGFILESTART
         else
             echo "[ATSD] Failed to create $description account '$ATSD_COLLECTOR_USER_NAME'." | tee -a  $LOGFILESTART
@@ -242,9 +242,14 @@ function start_atsd {
     function import_files_into_atsd {
         for file_path in ${atsd_import_list}; do
             echo "[ATSD] Importing '$file_path' configuration"
-            # TODO check import error
-            curl -i -s -u "$ATSD_ADMIN_USER_NAME:$ATSD_ADMIN_USER_PASSWORD" \
-                 -F "files=@$file_path" -F "autoEnable=on" http://127.0.0.1:8088/admin/import-backup
+            if curl -i -s -u "$ATSD_ADMIN_USER_NAME:$ATSD_ADMIN_USER_PASSWORD" \
+                    -F "files=@$file_path" \
+                    -F "autoEnable=on" \
+                    http://127.0.0.1:8088/admin/import-backup | grep -q "$HTTP_FOUND_CODE" ; then
+                echo "[ATSD] Successfully imported '$file_path'"
+            else
+                echo "[ATSD] Failed to import '$file_path'"
+            fi
         done
     }
 
@@ -308,7 +313,7 @@ function start_collector {
                 --data-urlencode "newPassword=$COLLECTOR_USER_PASSWORD" \
                 --data-urlencode "confirmedPassword=$COLLECTOR_USER_PASSWORD" \
                 --data-urlencode "commit=Save" \
-                https://127.0.0.1:9443/register.xhtml | grep -q ${HTTP_FOUND_CODE}; then
+                https://127.0.0.1:9443/register.xhtml | grep -q "$HTTP_FOUND_CODE"; then
                 echo "[Collector] Account '$COLLECTOR_USER_NAME' created." | tee -a  $LOGFILESTART
             else
                 echo "[Collector] Failed to create account '$COLLECTOR_USER_NAME'." | tee -a  $LOGFILESTART
