@@ -28,9 +28,10 @@ ATSD_COLLECTOR_USER_PASSWORD=collector
 COLLECTOR_USER_NAME=axibase
 COLLECTOR_USER_PASSWORD=axibase
 
-atsd_import_list=
-collector_import_arg=
-collector_execute_arg=
+declare atsd_import_list
+declare collector_import_arg
+declare collector_execute_arg
+declare import_path
 
 function split_by {
     local split_character=$1
@@ -62,6 +63,57 @@ function concat_with {
     echo "$right"
 }
 
+function resolve_file {
+    function download_or_fail {
+        local url=$1
+        local fatal_error_retries=3
+        local retry_delay=5
+        while [[ ${fatal_error_retries} > 0 ]]; do
+            echo "Downloading $url"
+            wget --retry-connrefused --waitretry=${retry_delay} \
+                -P "$TMP_DOWNLOAD_DIR" "$url"
+            local wget_exit_code=$?
+            if [ ${wget_exit_code} -eq ${WGET_SUCCESS_CODE} ]; then
+                return
+            elif [ ${wget_exit_code} -eq ${WGET_NETWORK_FAILURE_CODE} ]; then
+                sleep ${retry_delay}
+                fatal_error_retries=$((fatal_error_retries-1))
+                if [[ ${fatal_error_retries} > 0 ]]; then
+                    echo "WARNING: wget network error, retry"
+                fi
+            else
+                break
+            fi
+        done
+        echo "ERROR: unable to download '$url'"
+        exit 1
+    }
+
+    local current_path=$1
+    # Resolve file by URL, absolute path or relative path in $IMPORT_DIR directory
+    if [[ "$current_path" =~ (ftp|https?)://.* ]]; then
+        download_or_fail "$current_path"
+        local file_name=$(ls -1 "$TMP_DOWNLOAD_DIR")
+        import_path="$TMP_IMPORT_DIR"/${file_name%\?*}
+        mv "$TMP_DOWNLOAD_DIR"/"$file_name" "$import_path"
+    elif [[ "$current_path" =~ /.* ]]; then
+        if [[ ! -f "$current_path" ]]; then
+            echo "ERROR: File '$current_path' doesn't exist"
+            exit 1
+        fi
+        cp "$current_path" "$TMP_IMPORT_DIR"
+        import_path="$TMP_IMPORT_DIR"/$(basename "$current_path")
+    else
+        local source_path="$IMPORT_DIR"/"$current_path"
+        import_path="$TMP_IMPORT_DIR"/"$current_path"
+        if [[ ! -f "$source_path" ]]; then
+            echo "ERROR: File '$source_path' doesn't exist"
+            exit 1
+        fi
+        cp "$source_path" "$import_path"
+    fi
+}
+
 function prepare_import {
     function extract_job_name {
         local file_path=$1
@@ -81,59 +133,13 @@ function prepare_import {
             collector_execute_arg=$(concat_with "$collector_execute_arg" , "$job_name")
         }
 
-        function download_or_fail {
-            local url=$1
-            local fatal_error_retries=3
-            local retry_delay=5
-            while [[ ${fatal_error_retries} > 0 ]]; do
-                echo "Downloading $url"
-                wget --retry-connrefused --waitretry=${retry_delay} \
-                    -P "$TMP_DOWNLOAD_DIR" "$url"
-                local wget_exit_code=$?
-                if [ ${wget_exit_code} -eq ${WGET_SUCCESS_CODE} ]; then
-                    return
-                elif [ ${wget_exit_code} -eq ${WGET_NETWORK_FAILURE_CODE} ]; then
-                    sleep ${retry_delay}
-                    fatal_error_retries=$((fatal_error_retries-1))
-                    if [[ ${fatal_error_retries} > 0 ]]; then
-                        echo "WARNING: wget network error, retry"
-                    fi
-                else
-                    break
-                fi
-            done
-            echo "ERROR: unable to download '$url'"
-            exit 1
-        }
-
         local import_spec=$1
         local import_func=$2
         mkdir -p "$IMPORT_DIR"
         mkdir -p "$TMP_IMPORT_DIR"
         mkdir -p "$TMP_DOWNLOAD_DIR"
         for current_path in ${import_spec//,/ }; do
-            local import_path
-            if [[ "$current_path" =~ (ftp|https?)://.* ]]; then
-                download_or_fail "$current_path"
-                local file_name=$(ls -1 "$TMP_DOWNLOAD_DIR")
-                import_path="$TMP_IMPORT_DIR"/${file_name%\?*}
-                mv "$TMP_DOWNLOAD_DIR"/"$file_name" "$import_path"
-            elif [[ "$current_path" =~ /.* ]]; then
-                if [[ ! -f "$current_path" ]]; then
-                    echo "ERROR: File '$current_path' doesn't exist"
-                    exit 1
-                fi
-                cp "$current_path" "$TMP_IMPORT_DIR"
-                import_path="$TMP_IMPORT_DIR"/$(basename "$current_path")
-            else
-                local source_path="$IMPORT_DIR"/"$current_path"
-                import_path="$TMP_IMPORT_DIR"/"$current_path"
-                if [[ ! -f "$source_path" ]]; then
-                    echo "ERROR: File '$source_path' doesn't exist"
-                    exit 1
-                fi
-                cp "$source_path" "$import_path"
-            fi
+            resolve_file "$current_path"
             ${import_func} "$import_path"
         done
         rm -rf "$TMP_DOWNLOAD_DIR"
@@ -183,7 +189,8 @@ function prepare_import {
                     local key=${parameter_edit%%=*}
                     local right_side=${parameter_edit#*=}
                     if [ "$key" == "$right_side" ]; then
-                        update_from_file "$file_path" "$file_to_edit" "$key"
+                        resolve_file "$key"
+                        update_from_file "$file_path" "$file_to_edit" "$import_path"
                     else
                         update_entry "$file_path" "$file_to_edit" "$key" "$right_side"
                     fi
@@ -314,9 +321,9 @@ function start_collector {
                 --data-urlencode "confirmedPassword=$COLLECTOR_USER_PASSWORD" \
                 --data-urlencode "commit=Save" \
                 https://127.0.0.1:9443/register.xhtml | grep -q "$HTTP_FOUND_CODE"; then
-                echo "[Collector] Account '$COLLECTOR_USER_NAME' created." | tee -a  $LOGFILESTART
+                echo "[Collector] Account '$COLLECTOR_USER_NAME' created."
             else
-                echo "[Collector] Failed to create account '$COLLECTOR_USER_NAME'." | tee -a  $LOGFILESTART
+                echo "[Collector] Failed to create account '$COLLECTOR_USER_NAME'."
             fi
         fi
     }
