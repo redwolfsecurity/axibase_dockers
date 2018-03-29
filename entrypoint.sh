@@ -117,7 +117,7 @@ function resolve_file {
 function prepare_import {
     function extract_job_name {
         local file_path=$1
-        sed -n '/<com.axibase.collector.model.job.json.JsonJobConfig/{n;s/.*<name>\(.*\)<\/name>.*/\1/p}' "$file_path"
+        sed -n '/<com.axibase.collector.model.job./{n;s/.*<name>\(.*\)<\/name>.*/\1/p;q}' "$file_path"
     }
 
     function prepare_import_by_spec {
