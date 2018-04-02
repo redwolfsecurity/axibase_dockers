@@ -27,6 +27,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 |------------------|-------------|
 | `ATSD_IMPORT_PATH` | Comma-separated paths to files imported into **ATSD**. Path can refer to a file on the mounted file system or to a URL from which the file will be downloaded. |
 | `COLLECTOR_IMPORT_PATH` | Comma-separated paths to files imported into **Collector**. Path can refer to a file on the mounted file system or to a URL from which the file will be downloaded. |
+| `WEBHOOK` | Create webhook users from predefined set of templates, separated by comma |
 | `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
 
 ### File Import Parameters
@@ -66,6 +67,19 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
       --env COLLECTOR_IMPORT_PATH='marathon-jobs.xml' \
       axibase/atsd-sandbox:latest
    ```
+
+### Webhook templates
+
+`WEBHOOK` environment variable specifies which webhook user accounts will be created from templates at first start.
+The list of possible user templates:
+
+- aws-cw
+- github
+- jenkins
+- slack
+- telegram
+
+Each Webhook user will have the same name. Webhooks URLs are defined as described [here](https://github.com/axibase/atsd/blob/master/api/data/messages/webhook.md#sample-urls)
 
 ### Job Configuration Parameters
 
