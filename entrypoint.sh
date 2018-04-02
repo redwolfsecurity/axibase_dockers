@@ -9,6 +9,7 @@ LOGFILESTART="`readlink -f ${DISTR_HOME}/atsd/logs/start.log`"
 LOGFILESTOP="`readlink -f ${DISTR_HOME}/atsd/logs/stop.log`"
 ZOOKEEPER_DATA_DIR="${DISTR_HOME}/hbase/zookeeper"
 
+HTTP_OK_CODE="200 OK"
 HTTP_FOUND_CODE="302 Found"
 WGET_SUCCESS_CODE=0
 WGET_NETWORK_FAILURE_CODE=4
@@ -27,6 +28,14 @@ ATSD_COLLECTOR_USER_PASSWORD=collector
 
 COLLECTOR_USER_NAME=axibase
 COLLECTOR_USER_PASSWORD=axibase
+
+GITHUB_WEBHOOK_PATH="?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&header.tag.event=X-GitHub-Event&repo=atsd&excludeValues=http*&debug=true"
+AWS_WEBHOOK_PATH="?type=webhook&entity=aws-cw&command.date=Timestamp&json.parse=Message&exclude=Signature;SignatureVersion;SigningCertURL;SignatureVersion;UnsubscribeURL;MessageId;Message.detail.instance-id;Message.time;Message.id;Message.version"
+JENKINS_WEBHOOK_PATH="?type=webhook&entity=jenkins&command.date=build.timestamp&datetimePattern=milliseconds&exclude=build.url;url;build.artifacts*"
+SLACK_WEBHOOK_PATH="?type=webhook&entity=slack&command.message=event.text&command.date=event.ts&exclude=event.event_ts&exclude=event_time&exclude=event.icons.image*&exclude=*thumb*&exclude=token&exclude=event_id&exclude=event.message.edited.ts&exclude=*.ts"
+TELEGRAM_WEBHOOK_PATH="?type=webhook&entity=telegram&command.message=message.text"
+
+WEBHOOK_USER_RANDOM_PASSWORD_LENGTH=8
 
 declare atsd_import_list
 declare collector_import_arg
@@ -63,6 +72,17 @@ function concat_with {
     echo "$right"
 }
 
+# Read input to the end
+# curl reports error if we don't do it
+function contains {
+    local pattern=$1
+    cat > /tmp/cmd_output
+    grep -q "$pattern" /tmp/cmd_output
+    local result=$?
+    rm /tmp/cmd_output
+    return ${result}
+}
+
 function resolve_file {
     function download_or_fail {
         local url=$1
@@ -79,7 +99,7 @@ function resolve_file {
                 sleep ${retry_delay}
                 fatal_error_retries=$((fatal_error_retries-1))
                 if [[ ${fatal_error_retries} > 0 ]]; then
-                    echo "WARNING: wget network error, retry"
+                    echo "WARNING: wget network error, retry" >&2
                 fi
             else
                 break
@@ -98,7 +118,7 @@ function resolve_file {
         mv "$TMP_DOWNLOAD_DIR"/"$file_name" "$import_path"
     elif [[ "$current_path" =~ /.* ]]; then
         if [[ ! -f "$current_path" ]]; then
-            echo "ERROR: File '$current_path' doesn't exist"
+            echo "ERROR: File '$current_path' doesn't exist" >&2
             exit 1
         fi
         cp "$current_path" "$TMP_IMPORT_DIR"
@@ -107,7 +127,7 @@ function resolve_file {
         local source_path="$IMPORT_DIR"/"$current_path"
         import_path="$TMP_IMPORT_DIR"/"$current_path"
         if [[ ! -f "$source_path" ]]; then
-            echo "ERROR: File '$source_path' doesn't exist"
+            echo "ERROR: File '$source_path' doesn't exist" >&2
             exit 1
         fi
         cp "$source_path" "$import_path"
@@ -151,7 +171,7 @@ function prepare_import {
         local key=$3
         local right_side=$4
         if ! grep -qE "<$key( [^>]*)?>" "$file_path"; then
-            echo "WARNING: Tag '$key' not found in '$file_to_edit'"
+            echo "WARNING: Tag '$key' not found in '$file_to_edit'" >&2
             continue
         fi
         local value=$(sed_escape $(xml_escape "$right_side"))
@@ -181,7 +201,7 @@ function prepare_import {
                 if [ -f "$file_path" ]; then
                     echo "Updating file '$file_to_edit' for import"
                 else
-                    echo "WARNING: Can't update '$file_to_edit', file doesn't exist"
+                    echo "WARNING: Can't update '$file_to_edit', file doesn't exist" >&2
                     continue
                 fi
                 local parameter_edits=$(split_by , "${file_edit#*:}")
@@ -229,7 +249,7 @@ function start_atsd {
             --data-urlencode "userBean.username=$user" \
             --data-urlencode "userBean.password=$pass" \
             --data-urlencode "repeatPassword=$pass" \
-            http://127.0.0.1:8088/login${params} | grep -q "$HTTP_FOUND_CODE"; then
+            http://127.0.0.1:8088/login${params} | contains "$HTTP_FOUND_CODE"; then
             echo "[ATSD] $description account '$user' created." | tee -a  $LOGFILESTART
         else
             echo "[ATSD] Failed to create $description account '$ATSD_COLLECTOR_USER_NAME'." | tee -a  $LOGFILESTART
@@ -252,12 +272,82 @@ function start_atsd {
             if curl -i -s -u "$ATSD_ADMIN_USER_NAME:$ATSD_ADMIN_USER_PASSWORD" \
                     -F "files=@$file_path" \
                     -F "autoEnable=on" \
-                    http://127.0.0.1:8088/admin/import-backup | grep -q "$HTTP_FOUND_CODE" ; then
+                    http://127.0.0.1:8088/admin/import-backup | contains "$HTTP_FOUND_CODE" ; then
                 echo "[ATSD] Successfully imported '$file_path'"
             else
                 echo "[ATSD] Failed to import '$file_path'"
             fi
         done
+    }
+
+    function get_webhook_url_for {
+        local name=$1
+        case "$name" in
+            github)
+                echo "$GITHUB_WEBHOOK_PATH"
+                ;;
+            aws-cw)
+                echo "$AWS_WEBHOOK_PATH"
+                ;;
+            jenkins)
+                echo "$JENKINS_WEBHOOK_PATH"
+                ;;
+            slack)
+                echo "$SLACK_WEBHOOK_PATH"
+                ;;
+            telegram)
+                echo "$TELEGRAM_WEBHOOK_PATH"
+                ;;
+            *)
+                echo "ERROR: Unknown webhook type '$name'" >&2
+                ;;
+        esac
+    }
+
+    function random_password {
+        cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${WEBHOOK_USER_RANDOM_PASSWORD_LENGTH} | head -n 1
+    }
+
+    function print_webhook_url {
+        local name=$1
+        local password=$2
+        local path=$3
+        echo "https://${name}:${password}@${HOSTNAME}:8443/api/v1/messages/webhook/${name}${path}"
+
+    }
+
+    function create_webhook_user {
+        local name=$1
+        local new_password=$(random_password)
+        local url_path=$(get_webhook_url_for "$name")
+
+        if [ -z  "$url_path" ]; then
+            exit 1
+        fi
+
+        if curl -i -s -u "axibase:axibase" \
+                --data-urlencode "create=Create" \
+                --data-urlencode "entity=${name}" \
+                --data-urlencode "entityGroup=${name}-entities" \
+                --data-urlencode "password=${new_password}" \
+                --data-urlencode "repeatPassword=${new_password}" \
+                --data-urlencode "userGroup=${name}-users" \
+                --data-urlencode "username=${name}" \
+                http://127.0.0.1:8088/admin/users/webhook_user | \
+           contains "$HTTP_OK_CODE"; then
+            echo "$name" webhook created:
+            print_webhook_url "$name" "$new_password" "$url_path"
+        else
+            echo "Failed"
+        fi
+    }
+
+    function create_webhook_users {
+        if [ -n "$WEBHOOK" ]; then
+            for webhook_name in ${WEBHOOK//,/ }; do
+                create_webhook_user "$webhook_name"
+            done
+        fi
     }
 
     su axibase ${ATSD_ALL} start
@@ -273,6 +363,7 @@ function start_atsd {
         create_account "$ATSD_ADMIN_USER_NAME" "$ATSD_ADMIN_USER_PASSWORD" "" "Administrator"
         configure_phantom
         import_files_into_atsd
+        create_webhook_users
     fi
 }
 
