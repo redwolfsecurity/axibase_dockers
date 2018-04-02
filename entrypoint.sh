@@ -256,14 +256,27 @@ function start_atsd {
         fi
     }
 
+    function set_atsd_property {
+        local key=$1
+        local value=$2
+
+        curl -s -u "$ATSD_ADMIN_USER_NAME":"$ATSD_ADMIN_USER_PASSWORD" \
+            --data-urlencode "options[0].key=$key" \
+            --data-urlencode "options[0].value=$value" \
+            --data-urlencode "apply=Save" \
+            http://127.0.0.1:8088/admin/serverproperties
+    }
+
     function configure_phantom {
         local property_name="webdriver.phantomjs.path"
         local binary_location="/opt/atsd/phantomjs-2.1.1-linux-x86_64/bin/phantomjs"
-        curl -s -u "$ATSD_ADMIN_USER_NAME":"$ATSD_ADMIN_USER_PASSWORD" \
-            --data-urlencode "options[0].key=$property_name" \
-            --data-urlencode "options[0].value=$binary_location" \
-            --data-urlencode "apply=Save" \
-            http://127.0.0.1:8088/admin/serverproperties
+        set_atsd_property "$property_name" "$binary_location"
+    }
+
+    function set_server_url {
+        if [ -n "$SERVER_URL" ]; then
+            set_atsd_property "server_url" "$SERVER_URL"
+        fi
     }
 
     function import_files_into_atsd {
@@ -312,8 +325,16 @@ function start_atsd {
         local name=$1
         local password=$2
         local path=$3
-        echo "https://${name}:${password}@${HOSTNAME}:8443/api/v1/messages/webhook/${name}${path}"
-
+        local base_url="$SERVER_URL"
+        if [ -z "$base_url" ]; then
+            base_url="https://${HOSTNAME}:8443"
+        fi
+        if [[ "$base_url" =~ https?:// ]]; then
+            base_url="${base_url/:\/\//:\/\/${name}:${password}@}"
+        else
+            base_url="${name}:${password}@$base_url"
+        fi
+        echo "${base_url}/api/v1/messages/webhook/${name}${path}"
     }
 
     function create_webhook_user {
