@@ -102,12 +102,28 @@ These parameters can be set to `on`/`off` or `true`/`false`:
 Sample configuration:
 
 ```
+cat /home/user/import/mail.properties
+```
+
+```
+enabled=true
+server_name=ATSD-sandbox
 server=mail.example.org
 port=587
+sender=myuser@example.org
 user=myuser@example.org
 password=secret
+auth=true
 ssl=true
 upgrade_ssl=true
+```
+
+```
+ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+      --name=atsd-sandbox \
+      --volume /home/user/import:/import \
+      --env EMAIL_CONFIG=mail.properties
+      axibase/atsd-sandbox:latest
 ```
 
 ### Server URL
