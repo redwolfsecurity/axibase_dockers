@@ -44,6 +44,11 @@ fi
 #/opt/atsd/bin/atsd-dfs.sh start
 /opt/atsd/bin/atsd-hbase.sh start
 echo "delete 'atsd_counter', '__inst', 'type:t'" | /opt/atsd/hbase/bin/hbase shell
+
+rm /opt/atsd/atsd/logs/atsd.log
+rm /opt/atsd/atsd/logs/command*.log
+rm /opt/atsd/atsd/logs/err.log
+
 /opt/atsd/bin/atsd-tsd.sh start
 
 curl -i --data "userBean.username=$axiname&userBean.password=$axipass&repeatPassword=$axipass" http://127.0.0.1:8088/login
