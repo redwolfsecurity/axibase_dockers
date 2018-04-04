@@ -81,16 +81,16 @@ Supported configuration parameters.
 
 | Property | Description | Default value |
 |----------|-------------|---------------|
-| enable | Enable E-Mail notifications | on |
-| server_name | Server specified in the "From" field, for example `My ATSD Server` | `Axibase TSD` |
-| server | Hostname or IP address of your mail server, for example smtp.example.com | - |
-| port | Mail server port | - |
-| sender | Address specified in the "From" field, for example notify@example.com | - |
-| user | Username of the mailbox user | - |
-| password | Password of the mailbox user | - |
-| auth | Enable authentication | - |
-| ssl | Enable SSL encryption | `on` |
-| upgrade_ssl | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
+| `enable` | Enable E-Mail notifications | `on` |
+| `server_name` | Server specified in the "From" field, for example `My ATSD Server` | `Axibase TSD` |
+| `server` | Hostname or IP address of your mail server, for example smtp.example.com | - |
+| `port` | Mail server port | - |
+| `sender` | Address specified in the "From" field, for example notify@example.com | - |
+| `user` | Username of the mailbox user | - |
+| `password` | Password of the mailbox user | - |
+| `auth` | Enable authentication | - |
+| `ssl` | Enable SSL encryption | `on` |
+| `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
 
 These parameters can be set to `on`/`off` or `true`/`false`:
 
