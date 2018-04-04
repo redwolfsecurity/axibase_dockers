@@ -196,7 +196,7 @@ Semicolons and commas in file names, URLs, key and values must be escaped by `\`
 | `COLLECTOR_IMPORT_PATH` | Only `,` must be escaped. Do not escape `;` |
 | `COLLECTOR_CONFIG` | Both `,` and `;` must be escaped |
 
-Variables `WEBHOOK`, `SERVER_URL`, `EMAIL_CONFIG` do not require special esccaping for `,` and `;`.
+Variables `WEBHOOK`, `SERVER_URL`, `EMAIL_CONFIG` do not require special escaping for `,` and `;`.
 
    ```
    ... --env COLLECTOR_CONFIG='config.xml:password=password\,with\;separators' ...
