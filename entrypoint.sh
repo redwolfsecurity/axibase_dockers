@@ -189,7 +189,13 @@ function prepare_import {
             local file_path=$2
             local file_to_edit=$3
             local file_with_updates=$4
+            local mime_type=$(file --brief --mime-type "$file_with_updates")
+            if ! [[ "$mime_type" =~ text/* ]]; then
+                echo "ERROR: Bad file format or encoding '$file_with_updates'" >&2
+                exit 1
+            fi
             while read edit_line; do
+                edit_line=$(echo "$edit_line" | tr '\r' '\n')
                 local edit_line_key=${edit_line%%=*}
                 local edit_line_value=${edit_line#*=}
                 "$config_func" "$file_path" "$file_to_edit" "$edit_line_key" "$edit_line_value"
