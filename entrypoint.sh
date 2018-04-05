@@ -58,6 +58,15 @@ email_form_mapping=(
     ["upgrade_ssl"]="startTls"
 )
 
+declare -A webhook_mapping
+webhook_mapping=(
+    ["github"]="$GITHUB_WEBHOOK_PATH"
+    ["aws-cw"]="$AWS_WEBHOOK_PATH"
+    ["jenkins"]="$JENKINS_WEBHOOK_PATH"
+    ["slack"]="$SLACK_WEBHOOK_PATH"
+    ["telegram"]="$TELEGRAM_WEBHOOK_PATH"
+)
+
 function split_by {
     local split_character=$1
     local str_to_split=$2
@@ -346,30 +355,6 @@ function start_atsd {
         done
     }
 
-    function get_webhook_url_for {
-        local name=$1
-        case "$name" in
-            github)
-                echo "$GITHUB_WEBHOOK_PATH"
-                ;;
-            aws-cw)
-                echo "$AWS_WEBHOOK_PATH"
-                ;;
-            jenkins)
-                echo "$JENKINS_WEBHOOK_PATH"
-                ;;
-            slack)
-                echo "$SLACK_WEBHOOK_PATH"
-                ;;
-            telegram)
-                echo "$TELEGRAM_WEBHOOK_PATH"
-                ;;
-            *)
-                echo "ERROR: Unknown webhook type '$name'" >&2
-                ;;
-        esac
-    }
-
     function random_password {
         cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${WEBHOOK_USER_RANDOM_PASSWORD_LENGTH} | head -n 1
     }
@@ -393,9 +378,10 @@ function start_atsd {
     function create_webhook_user {
         local name=$1
         local new_password=$(random_password)
-        local url_path=$(get_webhook_url_for "$name")
+        local url_path=${webhook_mapping["$name"]}
 
         if [ -z  "$url_path" ]; then
+            echo "ERROR: Unknown webhook type '$name'" >&2
             exit 1
         fi
 
