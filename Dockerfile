@@ -14,7 +14,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
   && apt-get install --no-install-recommends -y locales \
   && locale-gen en_US.UTF-8 \
   && adduser --disabled-password --quiet --gecos "" axibase \
-  && apt-get install --no-install-recommends -y atsd && rm -rf /var/lib/apt/lists/* \
+  && apt-get install --no-install-recommends -y atsd nano && rm -rf /var/lib/apt/lists/* \
   && su -c '/opt/atsd/bin/atsd-all.sh stop' axibase
 
 #put script to docker
