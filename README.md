@@ -88,6 +88,8 @@ Supported configuration parameters.
 | `sender` | Address specified in the "From" field, for example notify@example.com | - |
 | `user` | Username of the mailbox user | - |
 | `password` | Password of the mailbox user | - |
+| `header` | HTML text to add before message body | - |
+| `footer` | HTML text to add after message body | - |
 | `auth` | Enable authentication | - |
 | `ssl` | Enable SSL encryption | `on` |
 | `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
@@ -113,6 +115,8 @@ port=587
 sender=myuser@example.org
 user=myuser@example.org
 password=secret
+header=<p style="color: #8db600; font-weight: bold; margin: 0px; padding: 0px;">Classification: UNCLASSIFIED</p>
+footer=<p style="color: #8db600;">END of MESSAGE</p>
 auth=true
 ssl=true
 upgrade_ssl=true
