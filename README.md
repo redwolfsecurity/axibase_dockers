@@ -152,7 +152,7 @@ Usage example:
 ```
 docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
       --name=atsd-sandbox \
-      --env SERVER_URL=example.com \
+      --env SERVER_URL=https://example.com \
       --env WEBHOOK=github,telegram \
       axibase/atsd-sandbox:latest
 ```
@@ -166,9 +166,9 @@ docker logs -f atsd-sandbox
 ```
 ...
 github webhook created:
-github:gZYrzSDi@example.com/api/v1/messages/webhook/github?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
+https://github:gZYrzSDi@example.com/api/v1/messages/webhook/github?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
 telegram webhook created:
-telegram:lNCJcdFx@example.com/api/v1/messages/webhook/telegram?type=webhook&entity=telegram&command.message=message.text
+https://telegram:lNCJcdFx@example.com/api/v1/messages/webhook/telegram?type=webhook&entity=telegram&command.message=message.text
 ...
 
 ```
