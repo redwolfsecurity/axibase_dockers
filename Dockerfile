@@ -18,7 +18,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
   && LANG=C DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y locales apt-utils \
   && locale-gen en_US.UTF-8 \
   && adduser --disabled-password --quiet --gecos "" axibase \
-  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y atsd wget unzip cron nano iproute2 \
+  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y atsd wget unzip cron nano iproute2 file \
   && rm -rf /var/lib/apt/lists/* \
   && sed -i '/.*hbase.cluster.distributed.*/{n;s/.*/   <value>false<\/value>/}' /opt/atsd/hbase/conf/hbase-site.xml \
   && wget -O /tmp/phantomjs.tar.gz https://axibase.com/public/phantomjs-2.1.1-linux-x86_64.tar.gz \

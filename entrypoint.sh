@@ -29,7 +29,7 @@ ATSD_COLLECTOR_USER_PASSWORD=collector
 COLLECTOR_USER_NAME=axibase
 COLLECTOR_USER_PASSWORD=axibase
 
-GITHUB_WEBHOOK_PATH="?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&header.tag.event=X-GitHub-Event&repo=atsd&excludeValues=http*&debug=true"
+GITHUB_WEBHOOK_PATH="?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true"
 AWS_WEBHOOK_PATH="?type=webhook&entity=aws-cw&command.date=Timestamp&json.parse=Message&exclude=Signature;SignatureVersion;SigningCertURL;SignatureVersion;UnsubscribeURL;MessageId;Message.detail.instance-id;Message.time;Message.id;Message.version"
 JENKINS_WEBHOOK_PATH="?type=webhook&entity=jenkins&command.date=build.timestamp&datetimePattern=milliseconds&exclude=build.url;url;build.artifacts*"
 SLACK_WEBHOOK_PATH="?type=webhook&entity=slack&command.message=event.text&command.date=event.ts&exclude=event.event_ts&exclude=event_time&exclude=event.icons.image*&exclude=*thumb*&exclude=token&exclude=event_id&exclude=event.message.edited.ts&exclude=*.ts"
@@ -41,6 +41,31 @@ declare atsd_import_list
 declare collector_import_arg
 declare collector_execute_arg
 declare import_path
+
+declare -A email_form
+declare -A email_form_mapping
+email_form_mapping=(
+    ["server_name"]="serverName"
+    ["server"]="serverHost"
+    ["port"]="port"
+    ["password"]="password"
+    ["user"]="user"
+    ["sender"]="senderAddress"
+    ["footer"]="messageFooter"
+    ["header"]="messageHeader"
+    ["auth"]="authentication"
+    ["ssl"]="ssl"
+    ["upgrade_ssl"]="startTls"
+)
+
+declare -A webhook_mapping
+webhook_mapping=(
+    ["github"]="$GITHUB_WEBHOOK_PATH"
+    ["aws-cw"]="$AWS_WEBHOOK_PATH"
+    ["jenkins"]="$JENKINS_WEBHOOK_PATH"
+    ["slack"]="$SLACK_WEBHOOK_PATH"
+    ["telegram"]="$TELEGRAM_WEBHOOK_PATH"
+)
 
 function split_by {
     local split_character=$1
@@ -153,6 +178,41 @@ function prepare_import {
             collector_execute_arg=$(concat_with "$collector_execute_arg" , "$job_name")
         }
 
+        function set_email_form_field {
+            local key=$1
+            local value=$2
+            email_form["$key"]="$value"
+        }
+
+        function configure_email_field {
+            local key=$3
+            local value=$4
+            local form_param=${email_form_mapping["$key"]}
+            if [ -n "$form_param" ]; then
+                set_email_form_field "$form_param" "$value"
+            else
+                echo "WARNING: Unknown email configuration property '$key'" >&2
+            fi
+        }
+
+        function configure_from_file {
+            local config_func=$1
+            local file_path=$2
+            local file_to_edit=$3
+            local file_with_updates=$4
+            local mime_type=$(file --brief --mime-type "$file_with_updates")
+            if ! [[ "$mime_type" =~ text/* ]]; then
+                echo "ERROR: Bad file format or encoding '$file_with_updates'" >&2
+                exit 1
+            fi
+            while read edit_line; do
+                edit_line=$(echo "$edit_line" | tr '\r' '\n')
+                local edit_line_key=${edit_line%%=*}
+                local edit_line_value=${edit_line#*=}
+                "$config_func" "$file_path" "$file_to_edit" "$edit_line_key" "$edit_line_value"
+            done < "$file_with_updates"
+        }
+
         local import_spec=$1
         local import_func=$2
         mkdir -p "$IMPORT_DIR"
@@ -181,17 +241,6 @@ function prepare_import {
         fi
     }
 
-    function update_from_file {
-        local file_path=$1
-        local file_to_edit=$2
-        local file_with_updates=$3
-        cat "$file_with_updates" | while read edit_line; do
-            local edit_line_key=${edit_line%%=*}
-            local edit_line_value=${edit_line#*=}
-            update_entry "$file_path" "$file_to_edit" "$edit_line_key" "$edit_line_value"
-        done
-    }
-
     function update_import_configs {
         if [ -n "$COLLECTOR_CONFIG" ]; then
             local file_edits=$(split_by \; "$COLLECTOR_CONFIG")
@@ -210,7 +259,7 @@ function prepare_import {
                     local right_side=${parameter_edit#*=}
                     if [ "$key" == "$right_side" ]; then
                         resolve_file "$key"
-                        update_from_file "$file_path" "$file_to_edit" "$import_path"
+                        configure_from_file update_entry "$file_path" "$file_to_edit" "$import_path"
                     else
                         update_entry "$file_path" "$file_to_edit" "$key" "$right_side"
                     fi
@@ -227,6 +276,19 @@ function prepare_import {
             prepare_import_by_spec "$COLLECTOR_IMPORT_PATH" update_collector_argument
             JOB_PATH=-job-path="$collector_import_arg"
             update_import_configs
+        fi
+        if [ -n "$EMAIL_CONFIG" ]; then
+            resolve_file "$EMAIL_CONFIG"
+            local email_config_file="$import_path"
+            set_email_form_field update Update
+            set_email_form_field enabled on
+            set_email_form_field ssl on
+            set_email_form_field startTls on
+            set_email_form_field serverName "Axibase TSD"
+            configure_from_file configure_email_field "" "" "$email_config_file"
+            if [ -z ${email_form["senderAddress"]} ]; then
+                set_email_form_field "senderAddress" ${email_form["user"]}
+            fi
         fi
     fi
 }
@@ -256,14 +318,27 @@ function start_atsd {
         fi
     }
 
+    function set_atsd_property {
+        local key=$1
+        local value=$2
+
+        curl -s -u "$ATSD_ADMIN_USER_NAME":"$ATSD_ADMIN_USER_PASSWORD" \
+            --data-urlencode "options[0].key=$key" \
+            --data-urlencode "options[0].value=$value" \
+            --data-urlencode "apply=Save" \
+            http://127.0.0.1:8088/admin/serverproperties
+    }
+
     function configure_phantom {
         local property_name="webdriver.phantomjs.path"
         local binary_location="/opt/atsd/phantomjs-2.1.1-linux-x86_64/bin/phantomjs"
-        curl -s -u "$ATSD_ADMIN_USER_NAME":"$ATSD_ADMIN_USER_PASSWORD" \
-            --data-urlencode "options[0].key=$property_name" \
-            --data-urlencode "options[0].value=$binary_location" \
-            --data-urlencode "apply=Save" \
-            http://127.0.0.1:8088/admin/serverproperties
+        set_atsd_property "$property_name" "$binary_location"
+    }
+
+    function set_server_url {
+        if [ -n "$SERVER_URL" ]; then
+            set_atsd_property "server_url" "$SERVER_URL"
+        fi
     }
 
     function import_files_into_atsd {
@@ -280,30 +355,6 @@ function start_atsd {
         done
     }
 
-    function get_webhook_url_for {
-        local name=$1
-        case "$name" in
-            github)
-                echo "$GITHUB_WEBHOOK_PATH"
-                ;;
-            aws-cw)
-                echo "$AWS_WEBHOOK_PATH"
-                ;;
-            jenkins)
-                echo "$JENKINS_WEBHOOK_PATH"
-                ;;
-            slack)
-                echo "$SLACK_WEBHOOK_PATH"
-                ;;
-            telegram)
-                echo "$TELEGRAM_WEBHOOK_PATH"
-                ;;
-            *)
-                echo "ERROR: Unknown webhook type '$name'" >&2
-                ;;
-        esac
-    }
-
     function random_password {
         cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${WEBHOOK_USER_RANDOM_PASSWORD_LENGTH} | head -n 1
     }
@@ -312,16 +363,25 @@ function start_atsd {
         local name=$1
         local password=$2
         local path=$3
-        echo "https://${name}:${password}@${HOSTNAME}:8443/api/v1/messages/webhook/${name}${path}"
-
+        local base_url="$SERVER_URL"
+        if [ -z "$base_url" ]; then
+            base_url="https://${HOSTNAME}:8443"
+        fi
+        if [[ "$base_url" =~ https?:// ]]; then
+            base_url="${base_url/:\/\//:\/\/${name}:${password}@}"
+        else
+            base_url="${name}:${password}@$base_url"
+        fi
+        echo "${base_url}/api/v1/messages/webhook/${name}${path}"
     }
 
     function create_webhook_user {
         local name=$1
         local new_password=$(random_password)
-        local url_path=$(get_webhook_url_for "$name")
+        local url_path=${webhook_mapping["$name"]}
 
         if [ -z  "$url_path" ]; then
+            echo "ERROR: Unknown webhook type '$name'" >&2
             exit 1
         fi
 
@@ -338,7 +398,7 @@ function start_atsd {
             echo "$name" webhook created:
             print_webhook_url "$name" "$new_password" "$url_path"
         else
-            echo "Failed"
+            echo "WARNING: Failed to create webhook user '${name}'" >&2
         fi
     }
 
@@ -347,6 +407,23 @@ function start_atsd {
             for webhook_name in ${WEBHOOK//,/ }; do
                 create_webhook_user "$webhook_name"
             done
+        fi
+    }
+
+    function configure_email {
+        if [ -n "$EMAIL_CONFIG" ]; then
+            declare -a curl_data_arg
+            for key in ${!email_form[@]}; do
+                local value=${email_form["$key"]}
+                curl_data_arg+=("--data-urlencode" "${key}=${value}")
+            done
+            if curl -i -s -u "axibase:axibase" "${curl_data_arg[@]}" --trace-ascii /dev/stdout \
+                http://127.0.0.1:8088/admin/mailclient | \
+                contains "$HTTP_OK_CODE"; then
+                echo "Mail Client configured"
+            else
+                echo "WARNING: Failed to configure mail client"
+            fi
         fi
     }
 
@@ -364,6 +441,7 @@ function start_atsd {
         configure_phantom
         import_files_into_atsd
         create_webhook_users
+        configure_email
     fi
 }
 

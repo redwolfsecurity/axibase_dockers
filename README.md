@@ -27,14 +27,16 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 |------------------|-------------|
 | `ATSD_IMPORT_PATH` | Comma-separated paths to files imported into **ATSD**. Path can refer to a file on the mounted file system or to a URL from which the file will be downloaded. |
 | `COLLECTOR_IMPORT_PATH` | Comma-separated paths to files imported into **Collector**. Path can refer to a file on the mounted file system or to a URL from which the file will be downloaded. |
+| `SERVER_URL` | Define convenient server URL |
 | `WEBHOOK` | Create webhook users from predefined set of templates, separated by comma |
+| `EMAIL_CONFIG` | Path to a file with Mail Client configuration parameters |
 | `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
 
-### File Import Parameters
+### Path Formats
 
-`_IMPORT_PATH` parameters must be specified using the following format: `path_1,path_2,...,path_N` where each path can refer to:
+This path format is used in `ATSD_IMPORT_PATH` , `COLLECTOR_IMPORT_PATH`, `COLLECTOR_CONFIG` and `EMAIL_CONFIG` variables
 
-1. **URL address** of the `xml` configuration file or `zip/tar.gz` archive:
+1. **URL address** of the file:
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -43,7 +45,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --env COLLECTOR_IMPORT_PATH='https://example.com/marathon-jobs.xml' \
      axibase/atsd-sandbox:latest
    ```
-2. **Absolute path** on the container file system to the `xml` configuration file or `zip/tar.gz` archive:
+2. **Absolute path** on the container file system to the file:
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -54,7 +56,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --env COLLECTOR_IMPORT_PATH='/marathon-jobs.xml' \
      axibase/atsd-sandbox:latest
    ```
-3. **Relative path** to the the `xml` configuration file or `zip/tar.gz` archive. In this case the file should be placed in the `/import` directory on the container file system.
+3. **Relative path** to the the file. In this case the file should be placed in the `/import` directory on the container file system.
     ```sh
     mkdir /home/user/import
     cp atsd-marathon-xml.zip /home/user/import
@@ -68,7 +70,71 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
       axibase/atsd-sandbox:latest
    ```
 
-### Webhook templates
+### File Import Parameters
+
+`ATSD_IMPORT_PATH` and `COLLECTOR_IMPORT_PATH` variables must be specified using the following format: `path_1,path_2,...,path_N` where each path can refer to either an XML file or zip/tar.gz archive. See [path formats](#path-formats).
+
+### Mail Client Configuration
+
+`EMAIL_CONFIG` variable specifies the file to read Mail Client configuration from. See [path formats](#path-formats).
+Supported configuration parameters.
+
+| Property | Description | Default value |
+|----------|-------------|---------------|
+| `enable` | Enable E-Mail notifications | `on` |
+| `server_name` | Server specified in the "From" field, for example `My ATSD Server` | `Axibase TSD` |
+| `server` | Hostname or IP address of your mail server, for example smtp.example.com | - |
+| `port` | Mail server port | - |
+| `sender` | Address specified in the "From" field, for example notify@example.com | - |
+| `user` | Username of the mailbox user | - |
+| `password` | Password of the mailbox user | - |
+| `header` | HTML text to add before message body | - |
+| `footer` | HTML text to add after message body | - |
+| `auth` | Enable authentication | - |
+| `ssl` | Enable SSL encryption | `on` |
+| `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
+
+These parameters can be set to `on`/`off` or `true`/`false`:
+
+- enable
+- auth
+- ssl
+- upgrade_ssl
+
+Sample configuration:
+
+```
+cat /home/user/import/mail.properties
+```
+
+```
+enabled=true
+server_name=ATSD-sandbox
+server=mail.example.org
+port=587
+sender=myuser@example.org
+user=myuser@example.org
+password=secret
+header=<p style="color: #8db600; font-weight: bold; margin: 0px; padding: 0px;">Classification: UNCLASSIFIED</p>
+footer=<p style="color: #8db600;">END of MESSAGE</p>
+auth=true
+ssl=true
+upgrade_ssl=true
+```
+
+```
+ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+      --name=atsd-sandbox \
+      --volume /home/user/import:/import \
+      --env EMAIL_CONFIG=mail.properties \
+      axibase/atsd-sandbox:latest
+```
+
+### Server URL
+
+If `SERVER_URL` variable is defined, then `server.url` ATSD Server Property will be set to value of this variable.
+
+### Webhook Templates
 
 `WEBHOOK` environment variable specifies which webhook user accounts will be created from templates at first start.
 The list of possible user templates:
@@ -79,7 +145,33 @@ The list of possible user templates:
 - slack
 - telegram
 
-Each Webhook user will have the same name. Webhooks URLs are defined as described [here](https://github.com/axibase/atsd/blob/master/api/data/messages/webhook.md#sample-urls)
+Each webhook user will have the same name as template. Webhook URLs are defined as described [here](https://github.com/axibase/atsd/blob/master/api/data/messages/webhook.md#sample-urls)
+
+Usage example:
+
+```
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+      --name=atsd-sandbox \
+      --env SERVER_URL=https://example.com \
+      --env WEBHOOK=github,telegram \
+      axibase/atsd-sandbox:latest
+```
+
+Initialization output:
+
+```
+docker logs -f atsd-sandbox
+```
+
+```
+...
+github webhook created:
+https://github:gZYrzSDi@example.com/api/v1/messages/webhook/github?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
+telegram webhook created:
+https://telegram:lNCJcdFx@example.com/api/v1/messages/webhook/telegram?type=webhook&entity=telegram&command.message=message.text
+...
+
+```
 
 ### Job Configuration Parameters
 
@@ -89,7 +181,7 @@ Each instruction should be specified in the format `file_name.xml:/path/to/prope
 
 Instructions can be specified as follows:
 
-1. A path to a file on the container file system, that contains `key=value` lines:
+1. A path to a file on the container file system (see [path formats](#path-formats])), that contains `key=value` lines:
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -105,25 +197,8 @@ Instructions can be specified as follows:
    ```ls
    accessKeyId=key
    secretAccessKey=secret
-   ```  
-2. Same as previous, but the file is located in `/import` directory, and path to this file is relative:
-   ```sh
-   docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
-     --name=atsd-sandbox \
-     --volume /home/user/import:/import \
-     --env ATSD_IMPORT_PATH='https://github.com/axibase/atsd-use-cases/raw/master/how-to/aws/route53-health-checks/resources/aws-route53-xml.zip' \
-     --env COLLECTOR_IMPORT_PATH='https://raw.githubusercontent.com/axibase/atsd-use-cases/master/how-to/aws/route53-health-checks/resources/job_aws_aws-route53.xml' \
-     --env COLLECTOR_CONFIG="job_aws_aws-route53.xml:aws.conf" \
-     axibase/atsd-sandbox:latest
    ```
-   ```sh
-   cat /home/user/import/aws.conf
-   ```
-   ```ls
-   accessKeyId=key
-   secretAccessKey=secret
-   ```  
-3. A key-value pair in `key=value` format:
+2. A key-value pair in `key=value` format:
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -155,7 +230,7 @@ The XML file update involves replacement of XML tag values, identified with `key
   <password>1234456</password>  
   ```
   
-### Parameter Syntax
+### Parameters Syntax
 
 The variables must not contain whitespace characters.
 
@@ -166,6 +241,8 @@ Semicolons and commas in file names, URLs, key and values must be escaped by `\`
 | `ATSD_IMPORT_PATH` | Only `,` must be escaped. Do not escape `;` |
 | `COLLECTOR_IMPORT_PATH` | Only `,` must be escaped. Do not escape `;` |
 | `COLLECTOR_CONFIG` | Both `,` and `;` must be escaped |
+
+Variables `WEBHOOK`, `SERVER_URL`, `EMAIL_CONFIG` do not require special escaping for `,` and `;`.
 
    ```
    ... --env COLLECTOR_CONFIG='config.xml:password=password\,with\;separators' ...
