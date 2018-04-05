@@ -34,7 +34,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 
 ### Path Formats
 
-This path format is used in `ATSD_IMPORT_PATH` , `COLLECTOR_IMPORT_PATH`, `COLLECTOR_CONFIG` and `EMAIL_CONFIG` variables
+This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLECTOR_CONFIG` and `EMAIL_CONFIG` variables
 
 1. **URL address** of the file:
    ```sh
@@ -70,6 +70,8 @@ This path format is used in `ATSD_IMPORT_PATH` , `COLLECTOR_IMPORT_PATH`, `COLLE
       axibase/atsd-sandbox:latest
    ```
 
+> Note: files or directories mounted into the container, i.e. `--volume /home/user/import:/import`, should not be removed or renamed between container restarts.
+
 ### File Import Parameters
 
 `ATSD_IMPORT_PATH` and `COLLECTOR_IMPORT_PATH` variables must be specified using the following format: `path_1,path_2,...,path_N` where each path can refer to either an XML file or zip/tar.gz archive. See [path formats](#path-formats).
@@ -103,11 +105,11 @@ These parameters can be set to `on`/`off` or `true`/`false`:
 
 Sample configuration:
 
-```
+```sh
 cat /home/user/import/mail.properties
 ```
 
-```
+```ls
 enabled=true
 server_name=ATSD-sandbox
 server=mail.example.org
@@ -122,12 +124,12 @@ ssl=true
 upgrade_ssl=true
 ```
 
-```
- docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
-      --name=atsd-sandbox \
-      --volume /home/user/import:/import \
-      --env EMAIL_CONFIG=mail.properties \
-      axibase/atsd-sandbox:latest
+```sh
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+  --name=atsd-sandbox \
+  --volume /home/user/import:/import \
+  --env EMAIL_CONFIG=mail.properties \
+  axibase/atsd-sandbox:latest
 ```
 
 ### Server URL
@@ -149,17 +151,17 @@ Each webhook user will have the same name as template. Webhook URLs are defined 
 
 Usage example:
 
-```
+```sh
 docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
-      --name=atsd-sandbox \
-      --env SERVER_URL=https://example.com \
-      --env WEBHOOK=github,telegram \
-      axibase/atsd-sandbox:latest
+  --name=atsd-sandbox \
+  --env SERVER_URL=https://example.com \
+  --env WEBHOOK=github,telegram \
+  axibase/atsd-sandbox:latest
 ```
 
 Initialization output:
 
-```
+```sh
 docker logs -f atsd-sandbox
 ```
 
@@ -170,7 +172,6 @@ https://github:gZYrzSDi@example.com/api/v1/messages/webhook/github?type=webhook&
 telegram webhook created:
 https://telegram:lNCJcdFx@example.com/api/v1/messages/webhook/telegram?type=webhook&entity=telegram&command.message=message.text
 ...
-
 ```
 
 ### Job Configuration Parameters
@@ -211,7 +212,7 @@ Instructions can be specified as follows:
 
 The XML file update involves replacement of XML tag values, identified with `key`, with new values, for example:
 
-  ```
+  ```sh
   --env COLLECTOR_CONFIG='marathon-jobs.xml:server=mar1.example.com,userName=netops,password=1234456'
   ```
 
@@ -249,8 +250,6 @@ Variables `WEBHOOK`, `SERVER_URL`, `EMAIL_CONFIG` do not require special escapin
    ```
 
 Additional escaping might be required depending on the shell type and version.
-
-> Note: files or directories mounted into the container, i.e. `--volume /home/user/import:/import`, should not be removed or renamed between container restarts.
 
 ## Explore
 
