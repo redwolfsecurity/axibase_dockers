@@ -126,7 +126,7 @@ upgrade_ssl=true
  docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
       --name=atsd-sandbox \
       --volume /home/user/import:/import \
-      --env EMAIL_CONFIG=mail.properties
+      --env EMAIL_CONFIG=mail.properties \
       axibase/atsd-sandbox:latest
 ```
 
@@ -146,6 +146,32 @@ The list of possible user templates:
 - telegram
 
 Each webhook user will have the same name as template. Webhook URLs are defined as described [here](https://github.com/axibase/atsd/blob/master/api/data/messages/webhook.md#sample-urls)
+
+Usage example:
+
+```
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+      --name=atsd-sandbox \
+      --env SERVER_URL=example.com \
+      --env WEBHOOK=github,telegram \
+      axibase/atsd-sandbox:latest
+```
+
+Initialization output:
+
+```
+docker logs -f atsd-sandbox
+```
+
+```
+...
+github webhook created:
+github:gZYrzSDi@example.com/api/v1/messages/webhook/github?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
+telegram webhook created:
+telegram:lNCJcdFx@example.com/api/v1/messages/webhook/telegram?type=webhook&entity=telegram&command.message=message.text
+...
+
+```
 
 ### Job Configuration Parameters
 
