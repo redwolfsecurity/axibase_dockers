@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+
+    <!-- command.log -->
+    <appender name="commandsLogRoller" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>../logs/command.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>../logs/command.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>100MB</maxFileSize>
+        </triggeringPolicy>
+
+        <encoder>
+            <pattern>%date{ISO8601};%logger;%message%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="atsd" level="DEBUG" additivity="false">
+        <appender-ref ref="commandsLogRoller"/>
+    </logger>
+    <logger name="atsd.internal.command" level="DEBUG" additivity="false">
+        <appender-ref ref="commandsLogRoller"/>
+    </logger>
+
+    <!-- discard.log -->
+    <appender name="malformedLogRoller" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>../logs/command_malformed.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>../logs/command_malformed.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>10</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>25Mb</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>%date{ISO8601};%logger;%message%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="atsd.malformed" level="DEBUG" additivity="false">
+        <appender-ref ref="malformedLogRoller"/>
+    </logger>
+
+    <appender name="ignoredLogRoller" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>../logs/command_ignored.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>../logs/command_ignored.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>10</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>25Mb</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>%date{ISO8601};%message%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="atsd.ignored" level="DEBUG" additivity="false">
+        <appender-ref ref="ignoredLogRoller"/>
+    </logger>
+
+    <appender name="discardedLogRoller" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>../logs/command_discarded.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>../logs/command_discarded.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>10</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>25Mb</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>%date{ISO8601};%X{status};%message%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="atsd.internal.discard" level="DEBUG" additivity="false">
+        <appender-ref ref="discardedLogRoller"/>
+    </logger>
+
+    <!-- main -->
+    <appender name="logRoller" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="com.axibase.tsd.collector.logback.Collector">
+            <url>tcp://localhost:8081</url>
+        </filter>
+
+        <file>../logs/atsd.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>../logs/atsd.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10MB</maxFileSize>
+        </triggeringPolicy>
+
+        <encoder>
+            <pattern>%date{ISO8601};%level;%thread;%logger;%message%n</pattern>
+        </encoder>
+
+    </appender>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+        </encoder>
+    </appender>
+    <!--Jetty-->	
+    <appender name="jettyRoller" class="ch.qos.logback.core.FileAppender">
+        <file>../logs/jetty.log</file>
+        <encoder>
+            <pattern>%date{ISO8601};%level;%thread;%logger;%message%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="org.eclipse.jetty.server" level="DEBUG" additivity="false">
+      <appender-ref ref="jettyRoller"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="logRoller"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
