@@ -42,6 +42,7 @@ declare collector_import_arg
 declare collector_execute_arg
 declare import_path
 
+declare test_email
 declare -A email_form
 declare -A email_form_mapping
 email_form_mapping=(
@@ -188,7 +189,9 @@ function prepare_import {
             local key=$3
             local value=$4
             local form_param=${email_form_mapping["$key"]}
-            if [ -n "$form_param" ]; then
+            if [ "$key" = "test_email" ]; then
+                test_email="$value"
+            elif [ -n "$form_param" ]; then
                 set_email_form_field "$form_param" "$value"
             else
                 echo "WARNING: Unknown email configuration property '$key'" >&2
@@ -337,7 +340,7 @@ function start_atsd {
 
     function set_server_url {
         if [ -n "$SERVER_URL" ]; then
-            set_atsd_property "server_url" "$SERVER_URL"
+            set_atsd_property "server.url" "$SERVER_URL"
         fi
     }
 
@@ -413,10 +416,12 @@ function start_atsd {
     function configure_email {
         if [ -n "$EMAIL_CONFIG" ]; then
             declare -a curl_data_arg
+
             for key in ${!email_form[@]}; do
                 local value=${email_form["$key"]}
                 curl_data_arg+=("--data-urlencode" "${key}=${value}")
             done
+
             if curl -i -s -u "axibase:axibase" "${curl_data_arg[@]}" --trace-ascii /dev/stdout \
                 http://127.0.0.1:8088/admin/mailclient | \
                 contains "$HTTP_OK_CODE"; then
@@ -424,6 +429,32 @@ function start_atsd {
             else
                 echo "WARNING: Failed to configure mail client"
             fi
+
+            if [ -n "$test_email" ]; then
+                local test_subject="Email configuration test from ATSD at ${SERVER_URL}"
+                curl -s -u "axibase:axibase" \
+                    --data-urlencode "send=Send" \
+                    --data-urlencode "subject=${test_subject}" \
+                    --data-urlencode "email=${test_email}" \
+                    http://127.0.0.1:8088/admin/mailclient
+            fi
+        fi
+    }
+
+    function create_keystore {
+        if [ -n "$SERVER_URL" ]; then
+            local store_password=$(random_password)
+            echo -e "${store_password}\n${store_password}\n${SERVER_URL}\n\n\n\n\n\nyes\n"| \
+                keytool -genkeypair -keystore /tmp/server.pkcs12 -alias atsd \
+                -keyalg RSA -keysize 2048 -validity 3650 -storetype pkcs12 > /dev/null
+            curl -s -u "axibase:axibase" \
+                -F "file=@/tmp/server.pkcs12" \
+                -F "format=PKCS12" \
+                -F "certAlias=atsd" \
+                -F "password=$store_password" \
+                -F "keyPassword=$store_password" \
+                -F "replace=on" \
+                http://127.0.0.1:8088/admin/certificates/import
         fi
     }
 
@@ -442,6 +473,7 @@ function start_atsd {
         import_files_into_atsd
         create_webhook_users
         configure_email
+        create_keystore
     fi
 }
 
