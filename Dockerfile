@@ -3,7 +3,7 @@ MAINTAINER ATSD Developers <dev-atsd@axibase.com>
 ENV version latest
 #metadata
 LABEL com.axibase.vendor="Axibase Corporation" \
-  com.axibase.product="Axibase Time Series Database" \
+  com.axibase.product="Axibase Time Series Database: API Test Non-distributed" \
   com.axibase.code="ATSD" \
   com.axibase.revision="${version}"
   
