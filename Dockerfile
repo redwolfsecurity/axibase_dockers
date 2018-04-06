@@ -20,6 +20,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
 #put script to docker
 ADD hbase-site.xml /opt/atsd/hbase/conf/
 ADD rules.xml /opt/atsd/
+ADD logback.xml /opt/atsd/atsd/conf/
 
 #custom entrypoint to api-test reason
 ADD entrypoint-api-test.sh /
