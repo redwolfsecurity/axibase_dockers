@@ -122,7 +122,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
             <fileNamePattern>../logs/jetty.%i.log</fileNamePattern>
             <minIndex>1</minIndex>
-            <maxIndex>10</maxIndex>
+            <maxIndex>30</maxIndex>
         </rollingPolicy>
 
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
