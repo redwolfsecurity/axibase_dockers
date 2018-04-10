@@ -21,6 +21,14 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
   axibase/atsd-sandbox:latest
 ```
 
+> Binding `/var/run/docker.sock` is necessary for the sandbox to collect statistics from the Docker host. Remove it if the sandbox doesn't require Docker integration.
+
+## Exposed Ports
+
+* Port 8443: ATSD web interface.
+* Port 9443: Axibase Collector web interface.
+* Port 8081: ATSD [network commands](https://github.com/axibase/atsd/tree/master/api/network#supported-commands) receiver.
+
 ## Container Parameters
 
 | Variable Name | Description |
@@ -154,12 +162,12 @@ Usage example:
 ```sh
 docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
   --name=atsd-sandbox \
-  --env SERVER_URL=https://example.com \
+  --env SERVER_URL=https://atsd.company_name.com:8443 \
   --env WEBHOOK=github,telegram \
   axibase/atsd-sandbox:latest
 ```
 
-Initialization output:
+Start log:
 
 ```sh
 docker logs -f atsd-sandbox
@@ -169,10 +177,10 @@ docker logs -f atsd-sandbox
 ...
 Webhooks created:
 Webhook user: telegram
-Webhook URL: https://telegram:mYz4Peov@example.com/api/v1/messages/webhook/telegram?command.message=message.text
+Webhook URL: https://telegram:mYz4Peov@atsd.company_name.com:8443/api/v1/messages/webhook/telegram?command.message=message.text
 
 Webhook user: github
-Webhook URL: https://github:9pYV2hxn@example.com/api/v1/messages/webhook/github?exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
+Webhook URL: https://github:9pYV2hxn@atsd.company_name.com:8443/api/v1/messages/webhook/github?exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
 ```
 
 ### Job Configuration Parameters
@@ -254,6 +262,6 @@ Additional escaping might be required depending on the shell type and version.
 
 ## Explore
 
-*  ATSD web interface on `https://docker_host:8443/`
+* Port 8443: ATSD web interface on `https://docker_host:8443/`
 
-*  Axibase Collector web interface on `https://docker_host:9443/`
+* Port 9443: Axibase Collector web interface on `https://docker_host:9443/`
