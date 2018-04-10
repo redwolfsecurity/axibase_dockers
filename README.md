@@ -21,9 +21,9 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
   axibase/atsd-sandbox:latest
 ```
 
-> Parameter `/var/run/docker.sock` is necessary for the sandbox to collect statistics from the Docker host. Remove it if the sandbox doesn't require Docker integration.
+> Binding `/var/run/docker.sock` is necessary for the sandbox to collect statistics from the Docker host. Remove it if the sandbox doesn't require Docker integration.
 
-## Published Ports
+## Exposed Ports
 
 * Port 8443: ATSD web interface.
 * Port 9443: Axibase Collector web interface.
@@ -175,12 +175,12 @@ docker logs -f atsd-sandbox
 
 ```
 ...
-github webhook created:
-https://github:gZYrzSDi@atsd.company_name.com:8443/api/v1/messages/webhook/github?&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
-...
-telegram webhook created:
-https://telegram:lNCJcdFx@atsd.company_name.com:8443/api/v1/messages/webhook/telegram?command.message=message.text
-...
+Webhooks created:
+Webhook user: telegram
+Webhook URL: https://telegram:mYz4Peov@atsd.company_name.com:8443/api/v1/messages/webhook/telegram?command.message=message.text
+
+Webhook user: github
+Webhook URL: https://github:9pYV2hxn@atsd.company_name.com:8443/api/v1/messages/webhook/github?exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
 ```
 
 ### Job Configuration Parameters
