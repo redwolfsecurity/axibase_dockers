@@ -272,7 +272,17 @@ function prepare_import {
         fi
     }
 
+    function check_server_url {
+        if ! [[ "$SERVER_URL" =~ ^https?://[^:]+(:[0-9]+)?$ ]]; then
+            echo "WARNING: Wrong Server URL '$SERVER_URL' format, should be https://hostname[:port]" >&2
+        fi
+        if [[ "SERVER_URL" =~ ^http://.* ]]; then
+            echo "WARNING: HTTP protocol specified in Server URL '$SERVER_URL', use HTTPS instead" >&2
+        fi
+    }
+
     if [ -f "$FIRST_START_MARKER" ]; then
+        check_server_url
         if [ -n "$ATSD_IMPORT_PATH" ]; then
             prepare_import_by_spec "$ATSD_IMPORT_PATH" update_atsd_import_list
         fi
@@ -371,11 +381,14 @@ function start_atsd {
         if [ -z "$base_url" ]; then
             base_url="https://${HOSTNAME}:8443"
         fi
-        if [[ "$base_url" =~ https?:// ]]; then
-            base_url="${base_url/:\/\//:\/\/${name}:${password}@}"
-        else
-            base_url="${name}:${password}@$base_url"
+        local url_port=$(echo "$base_url" | sed 's/https:\/\/\([^:]\+\)\(:[0-9]\+\)/\2/')
+        if [ -z "$url_port" ]; then
+            base_url="${base_url}:8443"
         fi
+        if [[ "$base_url" =~ http://.* ]]; then
+            base_url=$(echo "${base_url}" | sed "s/^http/https/")
+        fi
+        base_url="${base_url/:\/\//:\/\/${name}:${password}@}"
         created_webhooks["$name"]="${base_url}/api/v1/messages/webhook/${name}${path}"
     }
 
