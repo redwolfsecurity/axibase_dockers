@@ -30,8 +30,8 @@ COLLECTOR_USER_NAME=axibase
 COLLECTOR_USER_PASSWORD=axibase
 
 GITHUB_WEBHOOK_PATH="?exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name%3Brepository.full_name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true"
-AWS_WEBHOOK_PATH="?command.date=Timestamp&json.parse=Message&exclude=Signature;SignatureVersion;SigningCertURL;SignatureVersion;UnsubscribeURL;MessageId;Message.detail.instance-id;Message.time;Message.id;Message.version"
-JENKINS_WEBHOOK_PATH="?command.date=build.timestamp&datetimePattern=milliseconds&exclude=build.url;url;build.artifacts*"
+AWS_WEBHOOK_PATH="?command.date=Timestamp&json.parse=Message&exclude=Signature%3BSignatureVersion%3BSigningCertURL%3BSignatureVersion%3BUnsubscribeURL%3BMessageId%3BMessage.detail.instance-id%3BMessage.time%3BMessage.id%3BMessage.version"
+JENKINS_WEBHOOK_PATH="?command.date=build.timestamp&datetimePattern=milliseconds&exclude=build.url%3Burl%3Bbuild.artifacts*"
 SLACK_WEBHOOK_PATH="?command.message=event.text&command.date=event.ts&exclude=event.event_ts&exclude=event_time&exclude=event.icons.image*&exclude=*thumb*&exclude=token&exclude=event_id&exclude=event.message.edited.ts&exclude=*.ts"
 TELEGRAM_WEBHOOK_PATH="?command.message=message.text"
 
