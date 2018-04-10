@@ -167,11 +167,12 @@ docker logs -f atsd-sandbox
 
 ```
 ...
-github webhook created:
-https://github:gZYrzSDi@example.com/api/v1/messages/webhook/github?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
-telegram webhook created:
-https://telegram:lNCJcdFx@example.com/api/v1/messages/webhook/telegram?type=webhook&entity=telegram&command.message=message.text
-...
+Webhooks created:
+Webhook user: telegram
+Webhook URL: https://telegram:mYz4Peov@example.com/api/v1/messages/webhook/telegram?command.message=message.text
+
+Webhook user: github
+Webhook URL: https://github:9pYV2hxn@example.com/api/v1/messages/webhook/github?exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
 ```
 
 ### Job Configuration Parameters

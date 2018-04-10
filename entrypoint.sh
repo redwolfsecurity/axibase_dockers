@@ -29,11 +29,11 @@ ATSD_COLLECTOR_USER_PASSWORD=collector
 COLLECTOR_USER_NAME=axibase
 COLLECTOR_USER_PASSWORD=axibase
 
-GITHUB_WEBHOOK_PATH="?type=webhook&entity=github&exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true"
-AWS_WEBHOOK_PATH="?type=webhook&entity=aws-cw&command.date=Timestamp&json.parse=Message&exclude=Signature;SignatureVersion;SigningCertURL;SignatureVersion;UnsubscribeURL;MessageId;Message.detail.instance-id;Message.time;Message.id;Message.version"
-JENKINS_WEBHOOK_PATH="?type=webhook&entity=jenkins&command.date=build.timestamp&datetimePattern=milliseconds&exclude=build.url;url;build.artifacts*"
-SLACK_WEBHOOK_PATH="?type=webhook&entity=slack&command.message=event.text&command.date=event.ts&exclude=event.event_ts&exclude=event_time&exclude=event.icons.image*&exclude=*thumb*&exclude=token&exclude=event_id&exclude=event.message.edited.ts&exclude=*.ts"
-TELEGRAM_WEBHOOK_PATH="?type=webhook&entity=telegram&command.message=message.text"
+GITHUB_WEBHOOK_PATH="?exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true"
+AWS_WEBHOOK_PATH="?command.date=Timestamp&json.parse=Message&exclude=Signature;SignatureVersion;SigningCertURL;SignatureVersion;UnsubscribeURL;MessageId;Message.detail.instance-id;Message.time;Message.id;Message.version"
+JENKINS_WEBHOOK_PATH="?command.date=build.timestamp&datetimePattern=milliseconds&exclude=build.url;url;build.artifacts*"
+SLACK_WEBHOOK_PATH="?command.message=event.text&command.date=event.ts&exclude=event.event_ts&exclude=event_time&exclude=event.icons.image*&exclude=*thumb*&exclude=token&exclude=event_id&exclude=event.message.edited.ts&exclude=*.ts"
+TELEGRAM_WEBHOOK_PATH="?command.message=message.text"
 
 WEBHOOK_USER_RANDOM_PASSWORD_LENGTH=8
 
@@ -59,6 +59,7 @@ email_form_mapping=(
     ["upgrade_ssl"]="startTls"
 )
 
+declare -A created_webhooks
 declare -A webhook_mapping
 webhook_mapping=(
     ["github"]="$GITHUB_WEBHOOK_PATH"
@@ -362,7 +363,7 @@ function start_atsd {
         cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${WEBHOOK_USER_RANDOM_PASSWORD_LENGTH} | head -n 1
     }
 
-    function print_webhook_url {
+    function save_webhook_url {
         local name=$1
         local password=$2
         local path=$3
@@ -375,7 +376,7 @@ function start_atsd {
         else
             base_url="${name}:${password}@$base_url"
         fi
-        echo "${base_url}/api/v1/messages/webhook/${name}${path}"
+        created_webhooks["$name"]="${base_url}/api/v1/messages/webhook/${name}${path}"
     }
 
     function create_webhook_user {
@@ -398,8 +399,8 @@ function start_atsd {
                 --data-urlencode "username=${name}" \
                 http://127.0.0.1:8088/admin/users/webhook_user | \
            contains "$HTTP_OK_CODE"; then
-            echo "$name" webhook created:
-            print_webhook_url "$name" "$new_password" "$url_path"
+            echo "[ATSD] $name webhook created"
+            save_webhook_url "$name" "$new_password" "$url_path"
         else
             echo "WARNING: Failed to create webhook user '${name}'" >&2
         fi
@@ -409,6 +410,18 @@ function start_atsd {
         if [ -n "$WEBHOOK" ]; then
             for webhook_name in ${WEBHOOK//,/ }; do
                 create_webhook_user "$webhook_name"
+            done
+        fi
+    }
+
+    function show_webhooks {
+        if [ ${#created_webhooks[@]} -gt 0 ]; then
+            echo "Webhooks created:"
+            for key in ${!created_webhooks[@]}; do
+                local value=${created_webhooks["$key"]}
+                echo "Webhook user: $key"
+                echo "Webhook URL: $value"
+                echo
             done
         fi
     }
@@ -425,9 +438,9 @@ function start_atsd {
             if curl -i -s -u "axibase:axibase" "${curl_data_arg[@]}" --trace-ascii /dev/stdout \
                 http://127.0.0.1:8088/admin/mailclient | \
                 contains "$HTTP_OK_CODE"; then
-                echo "Mail Client configured"
+                echo "[ATSD] Mail Client configured"
             else
-                echo "WARNING: Failed to configure mail client"
+                echo "[ATSD] WARNING: Failed to configure mail client"
             fi
 
             if [ -n "$test_email" ]; then
@@ -436,45 +449,49 @@ function start_atsd {
                     --data-urlencode "send=Send" \
                     --data-urlencode "subject=${test_subject}" \
                     --data-urlencode "email=${test_email}" \
-                    http://127.0.0.1:8088/admin/mailclient
+                    http://127.0.0.1:8088/admin/mailclient > /dev/null
             fi
         fi
     }
 
     function create_keystore {
         if [ -n "$SERVER_URL" ]; then
-            local store_password=$(random_password)
-            echo -e "${store_password}\n${store_password}\n${SERVER_URL}\n\n\n\n\n\nyes\n"| \
+            local store_password="atsd_sec_pwd"
+            local server_host=$(echo "$SERVER_URL" | sed -e "s/[^/]*\/\/\([^:/]*\).*/\1/")
+            echo -e "${store_password}\n${store_password}\n${server_host}\n\n\n\n\n\nyes\n"| \
                 keytool -genkeypair -keystore /tmp/server.pkcs12 -alias atsd \
-                -keyalg RSA -keysize 2048 -validity 3650 -storetype pkcs12 > /dev/null
-            curl -s -u "axibase:axibase" \
-                -F "file=@/tmp/server.pkcs12" \
-                -F "format=PKCS12" \
-                -F "certAlias=atsd" \
-                -F "password=$store_password" \
-                -F "keyPassword=$store_password" \
-                -F "replace=on" \
-                http://127.0.0.1:8088/admin/certificates/import
+                -keyalg RSA -keysize 2048 -validity 3650 -storetype pkcs12 &> /dev/null
+            mv /tmp/server.pkcs12 /opt/atsd/atsd/conf/server.keystore
         fi
     }
 
-    su axibase ${ATSD_ALL} start
+    function pre_start {
+        if [ -f "$FIRST_START_MARKER" ]; then
+            create_keystore
+        fi
+    }
 
+    function post_start {
+        if [ -f "$FIRST_START_MARKER" ]; then
+            set_tz
+            create_account "$ATSD_COLLECTOR_USER_NAME" "$ATSD_COLLECTOR_USER_PASSWORD" "?type=writer" "Collector"
+            create_account "$ATSD_ADMIN_USER_NAME" "$ATSD_ADMIN_USER_PASSWORD" "" "Administrator"
+            configure_phantom
+            import_files_into_atsd
+            create_webhook_users
+            configure_email
+        fi
+    }
+
+    pre_start
+
+    su axibase ${ATSD_ALL} start
     if [ $? -eq 1 ]; then
         echo "[ATSD] Failed to start ATSD. Check $LOGFILESTART file." | tee -a $LOGFILESTART
         exit 1
     fi
 
-    if [ -f "$FIRST_START_MARKER" ]; then
-        set_tz
-        create_account "$ATSD_COLLECTOR_USER_NAME" "$ATSD_COLLECTOR_USER_PASSWORD" "?type=writer" "Collector"
-        create_account "$ATSD_ADMIN_USER_NAME" "$ATSD_ADMIN_USER_PASSWORD" "" "Administrator"
-        configure_phantom
-        import_files_into_atsd
-        create_webhook_users
-        configure_email
-        create_keystore
-    fi
+    post_start
 }
 
 function start_collector {
@@ -538,10 +555,11 @@ function start_collector {
 
     if [ -n "$collector_execute_arg" ]; then
         JOB_EXECUTE=-job-execute="$collector_execute_arg"
+        WAIT_EXEC="wait-exec"
     fi
 
     #Start collector
-    ./start-collector.sh wait-exec \
+    ./start-collector.sh "$WAIT_EXEC" \
         -atsd-url="https://${ATSD_COLLECTOR_USER_NAME}:${ATSD_COLLECTOR_USER_PASSWORD}@localhost:8443" \
         "$JOB_ENABLE" "$JOB_PATH" "$JOB_EXECUTE"
 
@@ -602,10 +620,11 @@ prepare_import
 start_atsd
 start_collectd
 start_collector
+echo 'All applications started'
 if [ -f "$FIRST_START_MARKER" ]; then
     rm "$FIRST_START_MARKER"
+    show_webhooks
 fi
-echo 'All applications started'
 wait_loop
 echo "SIGTERM received ( docker stop ). Stopping services ..." | tee -a $LOGFILESTOP
 stop_services
