@@ -29,7 +29,7 @@ ATSD_COLLECTOR_USER_PASSWORD=collector
 COLLECTOR_USER_NAME=axibase
 COLLECTOR_USER_PASSWORD=axibase
 
-GITHUB_WEBHOOK_PATH="?exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true"
+GITHUB_WEBHOOK_PATH="?exclude=organization.*%3Brepository.*%3B*.signature%3B*.payload%3B*.sha%3B*.ref%3B*_at%3B*.id&include=repository.name%3Brepository.full_name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true"
 AWS_WEBHOOK_PATH="?command.date=Timestamp&json.parse=Message&exclude=Signature;SignatureVersion;SigningCertURL;SignatureVersion;UnsubscribeURL;MessageId;Message.detail.instance-id;Message.time;Message.id;Message.version"
 JENKINS_WEBHOOK_PATH="?command.date=build.timestamp&datetimePattern=milliseconds&exclude=build.url;url;build.artifacts*"
 SLACK_WEBHOOK_PATH="?command.message=event.text&command.date=event.ts&exclude=event.event_ts&exclude=event_time&exclude=event.icons.image*&exclude=*thumb*&exclude=token&exclude=event_id&exclude=event.message.edited.ts&exclude=*.ts"
