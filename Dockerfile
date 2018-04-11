@@ -9,9 +9,10 @@ LABEL com.axibase.vendor="Axibase Corporation" \
   
 #install and configure
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A57967CFB323846008796A6514F3CB79 \
+  && apt-get update \
+  && apt-get install --no-install-recommends -y locales apt-transport-https \
   && echo "deb [arch=amd64] http://axibase.com/public/repository/deb/ ./" >> /etc/apt/sources.list \
   && apt-get update \
-  && apt-get install --no-install-recommends -y locales \
   && locale-gen en_US.UTF-8 \
   && adduser --disabled-password --quiet --gecos "" axibase \
   && apt-get install --no-install-recommends -y atsd nano less wget curl && rm -rf /var/lib/apt/lists/* \
