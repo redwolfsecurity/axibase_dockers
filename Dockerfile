@@ -13,11 +13,12 @@ COPY *init.sh /tmp/
 
 # install and configure
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A57967CFB323846008796A6514F3CB79 \
-  && echo "deb [arch=amd64] http://axibase.com/public/repository/deb/ ./" >> /etc/apt/sources.list \
   && apt-get update \
-  && LANG=C DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y locales apt-utils \
+  && LANG=C DEBIAN_FRONTEND=noninteractive apt-get install -y locales apt-utils apt-transport-https \
   && locale-gen en_US.UTF-8 \
   && adduser --disabled-password --quiet --gecos "" axibase \
+  && echo "deb [arch=amd64] https://axibase.com/public/repository/deb/ ./" >> /etc/apt/sources.list \
+  && apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y atsd wget unzip cron nano iproute2 file \
   && rm -rf /var/lib/apt/lists/* \
   && sed -i '/.*hbase.cluster.distributed.*/{n;s/.*/   <value>false<\/value>/}' /opt/atsd/hbase/conf/hbase-site.xml \
