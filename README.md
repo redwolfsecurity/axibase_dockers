@@ -103,6 +103,7 @@ Supported configuration parameters.
 | `auth` | Enable authentication | - |
 | `ssl` | Enable SSL encryption | `on` |
 | `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
+| `test_email` | E-Mail address to send test message on first start | - |
 
 These parameters can be set to `on`/`off` or `true`/`false`:
 
