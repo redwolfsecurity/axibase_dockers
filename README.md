@@ -187,24 +187,25 @@ Webhook user: github
 Webhook URL: https://github:9pYV2hxn@atsd.company_name.com:8443/api/v1/messages/webhook/github?exclude=organization.*;repository.*;*.signature;*.payload;*.sha;*.ref;*_at;*.id&include=repository.name;repository.full_name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
 ```
 
-### Web notifications configuration
+### Web Notifications Configuration
 
 `TELEGRAM_CONFIG` and `SLACK_CONFIG` variables specify path to the files with configuration parameters for Telegram and Slack Web Notifications respectively.
-File format is the same as for `EMAIL_CONFIG`
+
+File format is the same as for `EMAIL_CONFIG` property.
 
 Configuration properties for `TELEGRAM_CONFIG`:
 
 | Property | Description |
 |----------|-------------|
-| `bot_id` | Bot API token given by [@Botfather](https://telegram.me/BotFather) |
-| `chat_id` | Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
+| `bot_id` | [**Required**] Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
+| `chat_id` | [**Required**] Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
 
 Configuration properties for `SLACK_CONFIG`:
 
 | Property | Description |
 |----------|-------------|
-| `token` | Authentication token bearing required scopes. |
-| `channels` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. |
+| `token` | [**Required**] Slack bot authentication token. |
+| `channels` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. Default value is `general`. |
 
 ### Job Configuration Parameters
 
