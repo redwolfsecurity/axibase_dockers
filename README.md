@@ -38,6 +38,8 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 | `SERVER_URL` | Define convenient server URL |
 | `WEBHOOK` | Create webhook users from predefined set of templates, separated by comma |
 | `EMAIL_CONFIG` | Path to a file with Mail Client configuration parameters |
+| `SLACK_CONFIG` | Path to a file with Slack Web Notification configuration parametres |
+| `TELEGRAM_CONFIG` | Path to a file with Telegram Web Notification configuration parametres |
 | `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
 
 ### Path Formats
@@ -64,7 +66,7 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
      --env COLLECTOR_IMPORT_PATH='/marathon-jobs.xml' \
      axibase/atsd-sandbox:latest
    ```
-3. **Relative path** to the the file. In this case the file should be placed in the `/import` directory on the container file system.
+3. **Relative path** to the file. In this case the file should be placed in the `/import` directory on the container file system.
     ```sh
     mkdir /home/user/import
     cp atsd-marathon-xml.zip /home/user/import
@@ -87,6 +89,7 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
 ### Mail Client Configuration
 
 `EMAIL_CONFIG` variable specifies the file to read Mail Client configuration from. See [path formats](#path-formats).
+The file contains configuaration entries in `property_name=value` format
 Supported configuration parameters.
 
 | Property | Description | Default value |
@@ -148,7 +151,7 @@ If `SERVER_URL` variable is defined, then `server.url` ATSD Server Property will
 ### Webhook Templates
 
 `WEBHOOK` environment variable specifies which webhook user accounts will be created from templates at first start.
-The list of possible user templates:
+The list of available user templates:
 
 - aws-cw
 - github
@@ -183,6 +186,25 @@ Webhook URL: https://telegram:mYz4Peov@atsd.company_name.com:8443/api/v1/message
 Webhook user: github
 Webhook URL: https://github:9pYV2hxn@atsd.company_name.com:8443/api/v1/messages/webhook/github?exclude=organization.*;repository.*;*.signature;*.payload;*.sha;*.ref;*_at;*.id&include=repository.name;repository.full_name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
 ```
+
+### Web notifications configuration
+
+`TELEGRAM_CONFIG` and `SLACK_CONFIG` variables specify path to the files with configuration parameters for Telegram and Slack Web Notifications respectively.
+File format is the same as for `EMAIL_CONFIG`
+
+Configuration properties for `TELEGRAM_CONFIG`:
+
+| Property | Description |
+|----------|-------------|
+| `bot_id` | Bot API token given by [@Botfather](https://telegram.me/BotFather) |
+| `chat_id` | Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
+
+Configuration properties for `SLACK_CONFIG`:
+
+| Property | Description |
+|----------|-------------|
+| `token` | Authentication token bearing required scopes. |
+| `channels` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. |
 
 ### Job Configuration Parameters
 
