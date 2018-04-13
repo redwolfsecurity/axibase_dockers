@@ -89,7 +89,9 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
 ### Mail Client Configuration
 
 `EMAIL_CONFIG` variable specifies the file to read Mail Client configuration from. See [path formats](#path-formats).
-The file contains configuaration entries in `property_name=value` format
+
+The file contains configuration entries in `property_name=value` format.
+
 Supported configuration parameters.
 
 | Property | Description | Default value |
@@ -108,12 +110,7 @@ Supported configuration parameters.
 | `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
 | `test_email` | E-Mail address to send test message on first start | - |
 
-These parameters can be set to `on`/`off` or `true`/`false`:
-
-- enable
-- auth
-- ssl
-- upgrade_ssl
+These parameters can be set to `on`/`off` or `true`/`false`: `enable`, `auth`, `ssl`, `upgrade_ssl`.
 
 Sample configuration:
 
@@ -129,8 +126,6 @@ port=587
 sender=myuser@example.org
 user=myuser@example.org
 password=secret
-header=<p style="color: #8db600; font-weight: bold; margin: 0px; padding: 0px;">Classification: UNCLASSIFIED</p>
-footer=<p style="color: #8db600;">END of MESSAGE</p>
 auth=true
 ssl=true
 upgrade_ssl=true
@@ -151,6 +146,7 @@ If `SERVER_URL` variable is defined, then `server.url` ATSD Server Property will
 ### Webhook Templates
 
 `WEBHOOK` environment variable specifies which webhook user accounts will be created from templates at first start.
+
 The list of available user templates:
 
 - aws-cw
@@ -191,7 +187,7 @@ Webhook URL: https://github:9pYV2hxn@atsd.company_name.com:8443/api/v1/messages/
 
 `TELEGRAM_CONFIG` and `SLACK_CONFIG` variables specify path to the files with configuration parameters for Telegram and Slack Web Notifications respectively.
 
-File format is the same as for `EMAIL_CONFIG` property.
+File format is the same as for `EMAIL_CONFIG` variable.
 
 Configuration properties for `TELEGRAM_CONFIG`:
 
