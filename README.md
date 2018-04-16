@@ -38,8 +38,8 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 | `SERVER_URL` | Define convenient server URL |
 | `WEBHOOK` | Create webhook users from predefined set of templates, separated by comma |
 | `EMAIL_CONFIG` | Path to a file with Mail Client configuration parameters |
-| `SLACK_CONFIG` | Path to a file with Slack Web Notification configuration parametres |
-| `TELEGRAM_CONFIG` | Path to a file with Telegram Web Notification configuration parametres |
+| `SLACK_CONFIG` | Path to a file with [Slack Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) configuration parametres |
+| `TELEGRAM_CONFIG` | Path to a file with [Telegram Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) configuration parametres |
 | `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
 
 ### Path Formats
@@ -185,7 +185,7 @@ Webhook URL: https://github:9pYV2hxn@atsd.company_name.com:8443/api/v1/messages/
 
 ### Web Notifications Configuration
 
-`TELEGRAM_CONFIG` and `SLACK_CONFIG` variables specify path to the files with configuration parameters for Telegram and Slack Web Notifications respectively.
+`TELEGRAM_CONFIG` and `SLACK_CONFIG` variables specify path to the files with configuration parameters for [Telegram](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) and [Slack](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) Web Notifications respectively.
 
 File format is the same as for `EMAIL_CONFIG` variable.
 
@@ -193,15 +193,34 @@ Configuration properties for `TELEGRAM_CONFIG`:
 
 | Property | Description |
 |----------|-------------|
-| `bot_id` | [**Required**] Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
-| `chat_id` | [**Required**] Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
+| `bot_id` | **Required** Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
+| `chat_id` | **Required** Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
 
 Configuration properties for `SLACK_CONFIG`:
 
 | Property | Description |
 |----------|-------------|
-| `token` | [**Required**] Slack bot authentication token. |
+| `token` | **Required** Slack bot authentication token. |
 | `channels` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. Default value is `general`. |
+
+Configuration example for Slack:
+
+```sh
+cat /home/user/import/slack_properties
+```
+
+```ls
+token=xoxb-************-************************
+channels=general,devops
+```
+
+```sh
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+  --volume /home/user/import:/import
+  --name=atsd-sandbox \
+  --env SLACK_CONFIG="slack.properties"
+  axibase/atsd-sandbox:latest
+```
 
 ### Job Configuration Parameters
 

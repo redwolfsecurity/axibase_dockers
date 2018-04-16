@@ -505,33 +505,43 @@ function start_atsd {
 
     function configure_telegram_notifications {
         if [ -n "$TELEGRAM_CONFIG" ]; then
-            curl -i -s -u "axibase:axibase" \
+            curl -s -u "axibase:axibase" \
                 --data-urlencode "contentType=application/x-www-form-urlencoded" \
                 --data-urlencode "parameterModels[0].key=bot_id" \
                 --data-urlencode "parameterModels[0].value=${telegram_form["bot_id"]}" \
                 --data-urlencode "parameterModels[1].key=chat_id" \
                 --data-urlencode "parameterModels[1].value=${telegram_form["chat_id"]}" \
+                --data-urlencode "parameterModels[2].key=text" \
+                --data-urlencode "parameterModels[2].exposed=on" \
+                --data-urlencode "parameterModels[3].key=details_table_format" \
+                --data-urlencode "parameterModels[3].exposed=on" \
+                --data-urlencode "parameterModels[4].key=disable_notification" \
+                --data-urlencode "parameterModels[4].exposed=on" \
+                --data-urlencode "pollingEnabled=on" \
+                --data-urlencode "updatesEnabled=on" \
                 --data-urlencode "enabled=on" \
                 --data-urlencode "name=Telegram" \
                 --data-urlencode "chatType=TELEGRAM" \
                 --data-urlencode "save=Save" \
-                http://127.0.0.1:8088/admin/web-notifications/telegram/TELEGRAM
+                http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram
         fi
     }
 
     function configure_slack_notifications {
         if [ -n "$SLACK_CONFIG" ]; then
-            curl -i -s -u "axibase:axibase" \
+            curl -s -u "axibase:axibase" \
                 --data-urlencode "contentType=application/x-www-form-urlencoded" \
                 --data-urlencode "parameterModels[0].key=token" \
                 --data-urlencode "parameterModels[0].value=${slack_form["token"]}" \
                 --data-urlencode "parameterModels[1].key=channels" \
                 --data-urlencode "parameterModels[1].value=${slack_form["channels"]}" \
+                --data-urlencode "parameterModels[2].exposed=on" \
+                --data-urlencode "parameterModels[2].key=text" \
                 --data-urlencode "enabled=on" \
                 --data-urlencode "name=Slack" \
                 --data-urlencode "chatType=SLACK" \
                 --data-urlencode "save=Save" \
-                http://127.0.0.1:8088/admin/web-notifications/slack/SLACK
+                http://127.0.0.1:8088/admin/web-notifications/slack/Slack
         fi
     }
 
