@@ -38,6 +38,8 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 | `SERVER_URL` | Define convenient server URL |
 | `WEBHOOK` | Create webhook users from predefined set of templates, separated by comma |
 | `EMAIL_CONFIG` | Path to a file with Mail Client configuration parameters |
+| `SLACK_CONFIG` | Path to a file with [Slack Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) configuration parametres |
+| `TELEGRAM_CONFIG` | Path to a file with [Telegram Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) configuration parametres |
 | `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
 
 ### Path Formats
@@ -64,7 +66,7 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
      --env COLLECTOR_IMPORT_PATH='/marathon-jobs.xml' \
      axibase/atsd-sandbox:latest
    ```
-3. **Relative path** to the the file. In this case the file should be placed in the `/import` directory on the container file system.
+3. **Relative path** to the file. In this case the file should be placed in the `/import` directory on the container file system.
     ```sh
     mkdir /home/user/import
     cp atsd-marathon-xml.zip /home/user/import
@@ -87,6 +89,9 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
 ### Mail Client Configuration
 
 `EMAIL_CONFIG` variable specifies the file to read Mail Client configuration from. See [path formats](#path-formats).
+
+The file contains configuration entries in `property_name=value` format.
+
 Supported configuration parameters.
 
 | Property | Description | Default value |
@@ -105,12 +110,7 @@ Supported configuration parameters.
 | `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
 | `test_email` | E-Mail address to send test message on first start | - |
 
-These parameters can be set to `on`/`off` or `true`/`false`:
-
-- enable
-- auth
-- ssl
-- upgrade_ssl
+These parameters can be set to `on`/`off` or `true`/`false`: `enable`, `auth`, `ssl`, `upgrade_ssl`.
 
 Sample configuration:
 
@@ -126,8 +126,6 @@ port=587
 sender=myuser@example.org
 user=myuser@example.org
 password=secret
-header=<p style="color: #8db600; font-weight: bold; margin: 0px; padding: 0px;">Classification: UNCLASSIFIED</p>
-footer=<p style="color: #8db600;">END of MESSAGE</p>
 auth=true
 ssl=true
 upgrade_ssl=true
@@ -148,7 +146,8 @@ If `SERVER_URL` variable is defined, then `server.url` ATSD Server Property will
 ### Webhook Templates
 
 `WEBHOOK` environment variable specifies which webhook user accounts will be created from templates at first start.
-The list of possible user templates:
+
+The list of available user templates:
 
 - aws-cw
 - github
@@ -182,6 +181,45 @@ Webhook URL: https://telegram:mYz4Peov@atsd.company_name.com:8443/api/v1/message
 
 Webhook user: github
 Webhook URL: https://github:9pYV2hxn@atsd.company_name.com:8443/api/v1/messages/webhook/github?exclude=organization.*;repository.*;*.signature;*.payload;*.sha;*.ref;*_at;*.id&include=repository.name;repository.full_name&header.tag.event=X-GitHub-Event&excludeValues=http*&debug=true
+```
+
+### Web Notifications Configuration
+
+`TELEGRAM_CONFIG` and `SLACK_CONFIG` variables specify path to the files with configuration parameters for [Telegram](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) and [Slack](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) Web Notifications respectively.
+
+File format is the same as for `EMAIL_CONFIG` variable.
+
+Configuration properties for `TELEGRAM_CONFIG`:
+
+| Property | Description |
+|----------|-------------|
+| `bot_id` | **Required** Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
+| `chat_id` | **Required** Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
+
+Configuration properties for `SLACK_CONFIG`:
+
+| Property | Description |
+|----------|-------------|
+| `token` | **Required** Slack bot authentication token. |
+| `channels` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. Default value is `general`. |
+
+Configuration example for Slack:
+
+```sh
+cat /home/user/import/slack_properties
+```
+
+```ls
+token=xoxb-************-************************
+channels=general,devops
+```
+
+```sh
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+  --volume /home/user/import:/import
+  --name=atsd-sandbox \
+  --env SLACK_CONFIG="slack.properties"
+  axibase/atsd-sandbox:latest
 ```
 
 ### Job Configuration Parameters

@@ -69,6 +69,9 @@ webhook_mapping=(
     ["telegram"]="$TELEGRAM_WEBHOOK_PATH"
 )
 
+declare -A telegram_form
+declare -A slack_form
+
 function split_by {
     local split_character=$1
     local str_to_split=$2
@@ -199,6 +202,18 @@ function prepare_import {
             fi
         }
 
+        function configure_slack_form_field {
+            local key=$3
+            local value=$4
+            slack_form["$key"]="$value"
+        }
+
+        function configure_telegram_form_field {
+            local key=$3
+            local value=$4
+            telegram_form["$key"]="$value"
+        }
+
         function configure_from_file {
             local config_func=$1
             local file_path=$2
@@ -303,6 +318,16 @@ function prepare_import {
             if [ -z ${email_form["senderAddress"]} ]; then
                 set_email_form_field "senderAddress" ${email_form["user"]}
             fi
+        fi
+        if [ -n "$TELEGRAM_CONFIG" ]; then
+            resolve_file "$TELEGRAM_CONFIG"
+            local telegram_config_file="$import_path"
+            configure_from_file configure_telegram_form_field "" "" "$telegram_config_file"
+        fi
+        if [ -n "$SLACK_CONFIG" ]; then
+            resolve_file "$SLACK_CONFIG"
+            local slack_config_file="$import_path"
+            configure_from_file configure_slack_form_field "" "" "$slack_config_file"
         fi
     fi
 }
@@ -478,6 +503,48 @@ function start_atsd {
         fi
     }
 
+    function configure_telegram_notifications {
+        if [ -n "$TELEGRAM_CONFIG" ]; then
+            curl -s -u "axibase:axibase" \
+                --data-urlencode "contentType=application/x-www-form-urlencoded" \
+                --data-urlencode "parameterModels[0].key=bot_id" \
+                --data-urlencode "parameterModels[0].value=${telegram_form["bot_id"]}" \
+                --data-urlencode "parameterModels[1].key=chat_id" \
+                --data-urlencode "parameterModels[1].value=${telegram_form["chat_id"]}" \
+                --data-urlencode "parameterModels[2].key=text" \
+                --data-urlencode "parameterModels[2].exposed=on" \
+                --data-urlencode "parameterModels[3].key=details_table_format" \
+                --data-urlencode "parameterModels[3].exposed=on" \
+                --data-urlencode "parameterModels[4].key=disable_notification" \
+                --data-urlencode "parameterModels[4].exposed=on" \
+                --data-urlencode "pollingEnabled=on" \
+                --data-urlencode "updatesEnabled=on" \
+                --data-urlencode "enabled=on" \
+                --data-urlencode "name=Telegram" \
+                --data-urlencode "chatType=TELEGRAM" \
+                --data-urlencode "save=Save" \
+                http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram
+        fi
+    }
+
+    function configure_slack_notifications {
+        if [ -n "$SLACK_CONFIG" ]; then
+            curl -s -u "axibase:axibase" \
+                --data-urlencode "contentType=application/x-www-form-urlencoded" \
+                --data-urlencode "parameterModels[0].key=token" \
+                --data-urlencode "parameterModels[0].value=${slack_form["token"]}" \
+                --data-urlencode "parameterModels[1].key=channels" \
+                --data-urlencode "parameterModels[1].value=${slack_form["channels"]}" \
+                --data-urlencode "parameterModels[2].exposed=on" \
+                --data-urlencode "parameterModels[2].key=text" \
+                --data-urlencode "enabled=on" \
+                --data-urlencode "name=Slack" \
+                --data-urlencode "chatType=SLACK" \
+                --data-urlencode "save=Save" \
+                http://127.0.0.1:8088/admin/web-notifications/slack/Slack
+        fi
+    }
+
     function pre_start {
         if [ -f "$FIRST_START_MARKER" ]; then
             create_keystore
@@ -493,6 +560,8 @@ function start_atsd {
             import_files_into_atsd
             create_webhook_users
             configure_email
+            configure_telegram_notifications
+            configure_slack_notifications
         fi
     }
 
