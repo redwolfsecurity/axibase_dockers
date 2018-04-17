@@ -505,7 +505,8 @@ function start_atsd {
 
     function configure_telegram_notifications {
         if [ -n "$TELEGRAM_CONFIG" ]; then
-            curl -s -u "axibase:axibase" \
+            echo "[ATSD] Configure Telegram Web Notifications."
+            local curl_request="-s -u "axibase:axibase" \
                 --data-urlencode "contentType=application/x-www-form-urlencoded" \
                 --data-urlencode "parameterModels[0].key=bot_id" \
                 --data-urlencode "parameterModels[0].value=${telegram_form["bot_id"]}" \
@@ -521,15 +522,24 @@ function start_atsd {
                 --data-urlencode "updatesEnabled=on" \
                 --data-urlencode "enabled=on" \
                 --data-urlencode "name=Telegram" \
-                --data-urlencode "chatType=TELEGRAM" \
-                --data-urlencode "save=Save" \
-                http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram
+                --data-urlencode "chatType=TELEGRAM""
+            curl ${curl_request} --data-urlencode "save=Save" \
+                http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram &> /dev/null
+            local response_status=$(curl ${curl_request} --data-urlencode "test=Test" \
+                http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram |& \
+                sed -n "/response-status/{s/[^>]\+>\([^<]\+\).*/\1/p}")
+            if [ -z "$response_status" ]; then
+                echo "[ATSD]   Telegram Web Notification test failed."
+            else
+                echo "[ATSD]   Telegram Web Notification test status: $response_status."
+            fi
         fi
     }
 
     function configure_slack_notifications {
         if [ -n "$SLACK_CONFIG" ]; then
-            curl -s -u "axibase:axibase" \
+            echo "[ATSD] Configure Slack Web Notifications."
+            local curl_request="-s -u "axibase:axibase" \
                 --data-urlencode "contentType=application/x-www-form-urlencoded" \
                 --data-urlencode "parameterModels[0].key=token" \
                 --data-urlencode "parameterModels[0].value=${slack_form["token"]}" \
@@ -539,9 +549,17 @@ function start_atsd {
                 --data-urlencode "parameterModels[2].key=text" \
                 --data-urlencode "enabled=on" \
                 --data-urlencode "name=Slack" \
-                --data-urlencode "chatType=SLACK" \
-                --data-urlencode "save=Save" \
-                http://127.0.0.1:8088/admin/web-notifications/slack/Slack
+                --data-urlencode "chatType=SLACK""
+            curl ${curl_request} --data-urlencode "save=Save" \
+                http://127.0.0.1:8088/admin/web-notifications/slack/Slack &> /dev/null
+            local response_status=$(curl ${curl_request} --data-urlencode "test=Test" \
+                http://127.0.0.1:8088/admin/web-notifications/slack/Slack |& \
+                sed -n "/response-status/{s/[^>]\+>\([^<]\+\).*/\1/p}")
+            if [ -z "$response_status" ]; then
+                echo "[ATSD]   Slack Web Notification test failed."
+            else
+                echo "[ATSD]   Slack Web Notification test status: $response_status."
+            fi
         fi
     }
 
