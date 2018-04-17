@@ -35,7 +35,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 |------------------|-------------|
 | `ATSD_IMPORT_PATH` | Comma-separated paths to files imported into **ATSD**. Path can refer to a file on the mounted file system or to a URL from which the file will be downloaded. |
 | `COLLECTOR_IMPORT_PATH` | Comma-separated paths to files imported into **Collector**. Path can refer to a file on the mounted file system or to a URL from which the file will be downloaded. |
-| `SERVER_URL` | Define convenient server URL |
+| `SERVER_URL` | ATSD web interface URL, including schema, hostname, and port, for example: `https://atsd.company_name.com:8443`. |
 | `WEBHOOK` | Create webhook users from predefined set of templates, separated by comma |
 | `EMAIL_CONFIG` | Path to a file with Mail Client configuration parameters |
 | `SLACK_CONFIG` | Path to a file with [Slack Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) configuration parametres |
