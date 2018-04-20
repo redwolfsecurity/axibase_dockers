@@ -170,72 +170,71 @@ function prepare_import {
         sed -n '/<com.axibase.collector.model.job./{n;s/.*<name>\(.*\)<\/name>.*/\1/p;q}' "$file_path"
     }
 
+    function update_atsd_import_list {
+        local import_path=$1
+        atsd_import_list="$atsd_import_list $import_path"
+    }
+
+    function update_collector_argument {
+        local import_path=$1
+        local job_name=$(extract_job_name "$import_path")
+        collector_import_arg=$(concat_with "$collector_import_arg" , "$import_path")
+        collector_execute_arg=$(concat_with "$collector_execute_arg" , "$job_name")
+    }
+
+    function set_email_form_field {
+        local key=$1
+        local value=$2
+        email_form["$key"]="$value"
+    }
+
+    function configure_email_field {
+        local key=$3
+        local value=$4
+        local form_param=${email_form_mapping["$key"]}
+        if [ "$key" = "test_email" ]; then
+            test_email="$value"
+        elif [ -n "$form_param" ]; then
+            set_email_form_field "$form_param" "$value"
+        else
+            echo "WARNING: Unknown email configuration property '$key'" >&2
+        fi
+    }
+
+    function configure_slack_form_field {
+        local key=$3
+        local value=$4
+        slack_form["$key"]="$value"
+    }
+
+    function configure_telegram_form_field {
+        local key=$3
+        local value=$4
+        telegram_form["$key"]="$value"
+    }
+
+    function configure_from_file {
+        local config_func=$1
+        local file_path=$2
+        local file_to_edit=$3
+        local file_with_updates=$4
+        local mime_type=$(file --brief --mime-type "$file_with_updates")
+        if ! [[ "$mime_type" =~ text/* ]]; then
+            echo "ERROR: Bad file format or encoding '$file_with_updates'" >&2
+            exit 1
+        fi
+        while read edit_line; do
+            edit_line=$(echo "$edit_line" | tr '\r' '\n')
+            local edit_line_key=${edit_line%%=*}
+            local edit_line_value=${edit_line#*=}
+            "$config_func" "$file_path" "$file_to_edit" "$edit_line_key" "$edit_line_value"
+        done < "$file_with_updates"
+    }
+
     function prepare_import_by_spec {
-        function update_atsd_import_list {
-            local import_path=$1
-            atsd_import_list="$atsd_import_list $import_path"
-        }
-
-        function update_collector_argument {
-            local import_path=$1
-            local job_name=$(extract_job_name "$import_path")
-            collector_import_arg=$(concat_with "$collector_import_arg" , "$import_path")
-            collector_execute_arg=$(concat_with "$collector_execute_arg" , "$job_name")
-        }
-
-        function set_email_form_field {
-            local key=$1
-            local value=$2
-            email_form["$key"]="$value"
-        }
-
-        function configure_email_field {
-            local key=$3
-            local value=$4
-            local form_param=${email_form_mapping["$key"]}
-            if [ "$key" = "test_email" ]; then
-                test_email="$value"
-            elif [ -n "$form_param" ]; then
-                set_email_form_field "$form_param" "$value"
-            else
-                echo "WARNING: Unknown email configuration property '$key'" >&2
-            fi
-        }
-
-        function configure_slack_form_field {
-            local key=$3
-            local value=$4
-            slack_form["$key"]="$value"
-        }
-
-        function configure_telegram_form_field {
-            local key=$3
-            local value=$4
-            telegram_form["$key"]="$value"
-        }
-
-        function configure_from_file {
-            local config_func=$1
-            local file_path=$2
-            local file_to_edit=$3
-            local file_with_updates=$4
-            local mime_type=$(file --brief --mime-type "$file_with_updates")
-            if ! [[ "$mime_type" =~ text/* ]]; then
-                echo "ERROR: Bad file format or encoding '$file_with_updates'" >&2
-                exit 1
-            fi
-            while read edit_line; do
-                edit_line=$(echo "$edit_line" | tr '\r' '\n')
-                local edit_line_key=${edit_line%%=*}
-                local edit_line_value=${edit_line#*=}
-                "$config_func" "$file_path" "$file_to_edit" "$edit_line_key" "$edit_line_value"
-            done < "$file_with_updates"
-        }
-
         local import_spec=$1
         local import_func=$2
         mkdir -p "$IMPORT_DIR"
-        mkdir -p "$TMP_IMPORT_DIR"
         mkdir -p "$TMP_DOWNLOAD_DIR"
         for current_path in ${import_spec//,/ }; do
             resolve_file "$current_path"
@@ -288,16 +287,20 @@ function prepare_import {
     }
 
     function check_server_url {
-        if ! [[ "$SERVER_URL" =~ ^https?://[^:]+(:[0-9]+)?$ ]]; then
-            echo "WARNING: Wrong Server URL '$SERVER_URL' format, should be https://hostname[:port]" >&2
-        fi
-        if [[ "SERVER_URL" =~ ^http://.* ]]; then
-            echo "WARNING: HTTP protocol specified in Server URL '$SERVER_URL', use HTTPS instead" >&2
+        if [ -n "$SERVER_URL" ]; then
+            if ! [[ "$SERVER_URL" =~ ^https?://[^:]+(:[0-9]+)?$ ]]; then
+                echo "WARNING: Wrong Server URL '$SERVER_URL' format, should be https://hostname[:port]" >&2
+            fi
+            if [[ "SERVER_URL" =~ ^http://.* ]]; then
+                echo "WARNING: HTTP protocol specified in Server URL '$SERVER_URL', use HTTPS instead" >&2
+            fi
         fi
     }
 
     if [ -f "$FIRST_START_MARKER" ]; then
         check_server_url
+
+        mkdir -p "$TMP_IMPORT_DIR"
         if [ -n "$ATSD_IMPORT_PATH" ]; then
             prepare_import_by_spec "$ATSD_IMPORT_PATH" update_atsd_import_list
         fi
@@ -318,6 +321,9 @@ function prepare_import {
             if [ -z ${email_form["senderAddress"]} ]; then
                 set_email_form_field "senderAddress" ${email_form["user"]}
             fi
+            if [ -n ${email_form["password"]} ] && [ -z ${email_form["authentication"]} ]; then
+                set_email_form_field "authentication" on
+            fi
         fi
         if [ -n "$TELEGRAM_CONFIG" ]; then
             resolve_file "$TELEGRAM_CONFIG"
@@ -329,6 +335,7 @@ function prepare_import {
             local slack_config_file="$import_path"
             configure_from_file configure_slack_form_field "" "" "$slack_config_file"
         fi
+        rm -rf "$TMP_IMPORT_DIR"
     fi
 }
 
