@@ -23,6 +23,16 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 
 > Binding `/var/run/docker.sock` is necessary for the sandbox to collect statistics from the Docker host. Remove it if the sandbox doesn't require Docker integration.
 
+## Default Credentials
+
+By default, new user credentials will be set as follows:
+
+`username: axibase`
+
+`password: axibase`
+
+Navigate to ATSD Account page by clicking the account icon in the upper-right corner of the screen to modify credentials after intial login.
+
 ## Exposed Ports
 
 * Port 8443: ATSD web interface.
