@@ -6,7 +6,7 @@ LABEL com.axibase.vendor="Axibase Corporation" \
  com.axibase.code="collectd-atsd" \
  com.axibase.revision="5.6.1"
 
-RUN apt-get clean && apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y \
       autoconf \
       automake \
       autotools-dev \
