@@ -480,7 +480,7 @@ function start_atsd {
                 curl_data_arg+=("--data-urlencode" "${key}=${value}")
             done
 
-            if curl -i -s -u "axibase:axibase" "${curl_data_arg[@]}" --trace-ascii /dev/stdout \
+            if curl -i -s -u "axibase:axibase" "${curl_data_arg[@]}" \
                 http://127.0.0.1:8088/admin/mailclient | \
                 contains "$HTTP_OK_CODE"; then
                 echo "[ATSD] Mail Client configured"
@@ -490,7 +490,7 @@ function start_atsd {
 
             if [ -n "$test_email" ]; then
                 local test_subject="Email configuration test from ATSD at ${SERVER_URL}"
-                curl -s -u "axibase:axibase" \
+                curl -i -s -u "axibase:axibase" \
                     --data-urlencode "send=Send" \
                     --data-urlencode "subject=${test_subject}" \
                     --data-urlencode "email=${test_email}" \
@@ -499,14 +499,16 @@ function start_atsd {
         fi
     }
 
-    function create_keystore {
+    function create_certificate {
         if [ -n "$SERVER_URL" ]; then
-            local store_password="atsd_sec_pwd"
             local server_host=$(echo "$SERVER_URL" | sed -e "s/[^/]*\/\/\([^:/]*\).*/\1/")
-            echo -e "${store_password}\n${store_password}\n${server_host}\n\n\n\n\n\nyes\n"| \
-                keytool -genkeypair -keystore /tmp/server.pkcs12 -alias atsd \
-                -keyalg RSA -keysize 2048 -validity 3650 -storetype pkcs12 &> /dev/null
-            mv /tmp/server.pkcs12 /opt/atsd/atsd/conf/server.keystore
+            if curl -i -s -u "axibase:axibase" \
+                    -F "domainName=${server_host}" \
+                    http://127.0.0.1:8088/admin/certificates/self-signed | contains "$HTTP_FOUND_CODE"; then
+                echo "[ATSD] Custom SSL certificate created."
+            else
+                echo "[ATSD] WARNING: Updating SSL certificate failed."
+            fi
         fi
     }
 
@@ -570,17 +572,12 @@ function start_atsd {
         fi
     }
 
-    function pre_start {
-        if [ -f "$FIRST_START_MARKER" ]; then
-            create_keystore
-        fi
-    }
-
     function post_start {
         if [ -f "$FIRST_START_MARKER" ]; then
             set_tz
             create_account "$ATSD_COLLECTOR_USER_NAME" "$ATSD_COLLECTOR_USER_PASSWORD" "?type=writer" "Collector"
             create_account "$ATSD_ADMIN_USER_NAME" "$ATSD_ADMIN_USER_PASSWORD" "" "Administrator"
+            create_certificate
             configure_phantom
             import_files_into_atsd
             create_webhook_users
@@ -589,8 +586,6 @@ function start_atsd {
             configure_slack_notifications
         fi
     }
-
-    pre_start
 
     su axibase ${ATSD_ALL} start
     if [ $? -eq 1 ]; then
