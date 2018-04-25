@@ -23,6 +23,12 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 
 > Binding `/var/run/docker.sock` is necessary for the sandbox to collect statistics from the Docker host. Remove it if the sandbox doesn't require Docker integration.
 
+## Exposed Ports
+
+* Port 8443: ATSD web interface at `https://docker_host:8443/`
+* Port 9443: Axibase Collector web interface at `https://docker_host:9443/`.
+* Port 8081: ATSD [network commands](https://github.com/axibase/atsd/tree/master/api/network#supported-commands) receiver.
+
 ## Default Credentials
 
 By default, new user credentials will be set as follows:
@@ -31,13 +37,7 @@ By default, new user credentials will be set as follows:
 
 `password: axibase`
 
-Navigate to ATSD Account page by clicking the account icon in the upper-right corner of the screen to modify credentials after intial login.
-
-## Exposed Ports
-
-* Port 8443: ATSD web interface.
-* Port 9443: Axibase Collector web interface.
-* Port 8081: ATSD [network commands](https://github.com/axibase/atsd/tree/master/api/network#supported-commands) receiver.
+Open the user account page in ATSD by clicking on the account icon in the upper-right corner of the screen to modify credentials after intial login.
 
 ## Container Parameters
 
@@ -92,23 +92,40 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
 
 > Note: files or directories mounted into the container, i.e. `--volume /home/user/import:/import`, should not be removed or renamed between container restarts.
 
-### File Import Parameters
+### Configuration File Import
+
+#### Import Parameters
 
 `ATSD_IMPORT_PATH` and `COLLECTOR_IMPORT_PATH` variables must be specified using the following format: `path_1,path_2,...,path_N` where each path can refer to either an XML file or zip/tar.gz archive. See [path formats](#path-formats).
-For each of imported files, substitution of environment variables will be performed. Placeholders should have '${ENV.ENV_NAME}' format, where `ENV_NAME` is the name of the environment variable.
-For example, `STRING=some_value` is defined and XML file has `string` entry with placeholder:
 
-```
-<string>${ENV.STRING}</string>
+#### Variable Substitution
+
+Environment variable substitution will be performed in each of the imported files. Placeholders should have '${ENV.NAME}' format, where `NAME` is the name of the environment variable.
+
+For example, the launch command declares a variable `NAMESPACE` and the imported `jobs.xml` file contains a corresponding placeholder `${ENV.NAMESPACE}`.
+
+```txt
+ --env NAMESPACE=Axibase \
+ --env COLLECTOR_IMPORT_PATH=jobs.xml \
 ```
 
-Before the file is imported, it will contain substituted value
-
-```
-<string>some_value</string>
+```xml
+<attr>${ENV.NAMESPACE}</attr>
 ```
 
-If environment variable for corresponding placeholder is not set, the placeholder will remain as is.
+The imported file will be modified by substituting `${ENV.NAMESPACE}` with the value of the `NAMESPACE` variable:
+
+```xml
+<attr>Axibase</attr>
+```
+
+To ensure that the XML file remains valid after the variable substitution, wrap the placeholder with `CDATA`.
+
+```xml
+<attr><![CDATA[${ENV.NAMESPACE}]]></attr>
+```
+
+If no corresponding environment variable is defined for a placeholder specified in the file, the placeholder will be retained `as is`.
 
 ### Mail Client Configuration
 
@@ -165,7 +182,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 
 ### Server URL
 
-If `SERVER_URL` variable is defined, then `server.url` ATSD Server Property will be set to value of this variable.
+If `SERVER_URL` variable is defined, the ATSD `server.url` property will be set to value of this variable. The `server.url` property determines the URL at which the ATSD web interface is accessible.
 
 ### Webhook Templates
 
@@ -322,9 +339,3 @@ Variables `WEBHOOK`, `SERVER_URL`, `EMAIL_CONFIG` do not require special escapin
    ```
 
 Additional escaping might be required depending on the shell type and version.
-
-## Explore
-
-* Port 8443: ATSD web interface on `https://docker_host:8443/`
-
-* Port 9443: Axibase Collector web interface on `https://docker_host:9443/`
