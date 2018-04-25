@@ -95,7 +95,7 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
 ### File Import Parameters
 
 `ATSD_IMPORT_PATH` and `COLLECTOR_IMPORT_PATH` variables must be specified using the following format: `path_1,path_2,...,path_N` where each path can refer to either an XML file or zip/tar.gz archive. See [path formats](#path-formats).
-For each of imported files, substitution of environment variables will be performed. Placeholders should have '${ENV.ENV_NAME}' format, where `ENV_NAME` is the name of the environment varaiable.
+For each of imported files, substitution of environment variables will be performed. Placeholders should have '${ENV.ENV_NAME}' format, where `ENV_NAME` is the name of the environment variable.
 For example, `STRING=some_value` is defined and XML file has `string` entry with placeholder:
 
 ```
