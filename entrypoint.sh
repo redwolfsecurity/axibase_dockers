@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Make ENV snapshot
+env > /tmp/.env
+
 trap 'echo "kill signal handled, stopping processes ..."; executing="false"' SIGINT SIGTERM
 DISTR_HOME="/opt/atsd"
 ATSD_ALL="${DISTR_HOME}/bin/atsd-all.sh"
@@ -238,6 +242,7 @@ function prepare_import {
         mkdir -p "$TMP_DOWNLOAD_DIR"
         for current_path in ${import_spec//,/ }; do
             resolve_file "$current_path"
+            configure_from_file update_env "$import_path" "" "/tmp/.env"
             ${import_func} "$import_path"
         done
         rm -rf "$TMP_DOWNLOAD_DIR"
@@ -257,6 +262,13 @@ function prepare_import {
         if [ "$key" = password ]; then
             sed -i "s/<password/& encrypted=\"false\"/" "$file_path"
         fi
+    }
+
+    function update_env {
+        local file_path=$1
+        local key=$3
+        local value=$(sed_escape $4)
+        sed -i "s/\${ENV.${key}}/${value}/g" "$file_path"
     }
 
     function update_import_configs {
@@ -335,7 +347,6 @@ function prepare_import {
             local slack_config_file="$import_path"
             configure_from_file configure_slack_form_field "" "" "$slack_config_file"
         fi
-        rm -rf "$TMP_IMPORT_DIR"
     fi
 }
 
