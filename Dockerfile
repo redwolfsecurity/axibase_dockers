@@ -1,5 +1,5 @@
 FROM debian:jessie
-MAINTAINER Axibase, dev@axibase.com
+MAINTAINER Axibase
 #metadata
 LABEL com.axibase.vendor="Axibase Corporation" \
  com.axibase.product="collectd with write_atsd plugin" \
