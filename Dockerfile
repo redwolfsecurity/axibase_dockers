@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 ENV version=19151 LANG=en_US.UTF-8
 
 # metadata
-LABEL com.axibase.maintainer="ATSD Developers <dev-atsd@axibase.com>" \
+LABEL com.axibase.maintainer="ATSD Developers" \
   com.axibase.vendor="Axibase Corporation" \
   com.axibase.product="Axibase Time Series Database" \
   com.axibase.code="ATSD" \
