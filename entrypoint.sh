@@ -583,6 +583,23 @@ function start_atsd {
         fi
     }
 
+    function update_input_settings {
+        curl -i -s -u "axibase:axibase" \
+            http://127.0.0.1:8088/admin/inputsettings \
+            --data-urlencode "commandLogEnabled=on" \
+            --data-urlencode "csvEnabled=on" \
+            --data-urlencode "hbaseWriteEnabled=on" \
+            --data-urlencode "lastInsertEnabled=on" \
+            --data-urlencode "lastInsertHbaseWriteEnabled=on" \
+            --data-urlencode "lastInsertStatisticsEnabled=on" \
+            --data-urlencode "malformedLogEnabled=on" \
+            --data-urlencode "messageEnabled=on" \
+            --data-urlencode "metricEnabled=on" \
+            --data-urlencode "propertyEnabled=on" \
+            --data-urlencode "ruleEnabled=on" \
+            --data-urlencode "update-gateway=Update"
+    }
+
     function post_start {
         if [ -f "$FIRST_START_MARKER" ]; then
             set_tz
@@ -595,6 +612,7 @@ function start_atsd {
             configure_email
             configure_telegram_notifications
             configure_slack_notifications
+            update_input_settings
         fi
     }
 
