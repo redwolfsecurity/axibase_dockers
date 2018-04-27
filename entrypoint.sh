@@ -661,12 +661,12 @@ function start_collector {
 
     if [ -e "$DOCKER_SOCKET" ]; then
         validate_docker_socket
-        JOB_ENABLE=-job-enable=docker-socket
         collector_execute_arg=$(concat_with "$collector_execute_arg" , docker-socket)
     fi
     start_cron
 
     if [ -n "$collector_execute_arg" ]; then
+        JOB_ENABLE=-job-enable="$collector_execute_arg"
         JOB_EXECUTE=-job-execute="$collector_execute_arg"
         WAIT_EXEC="wait-exec"
     fi
