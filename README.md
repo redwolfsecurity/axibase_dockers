@@ -21,7 +21,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
   axibase/atsd-sandbox:latest
 ```
 
-> Mounting `/var/run/docker.sock` is necessary for the sandbox to collect performance statistics from the Docker host. Remove the `--volume` variable if this is not needed.
+> Mounting `/var/run/docker.sock` is necessary for the sandbox to collect performance statistics from the Docker host. Remove the `--volume` option if this is not needed.
 
 Watch the container start log for `All applications started` message.
 
