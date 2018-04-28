@@ -583,6 +583,23 @@ function start_atsd {
         fi
     }
 
+    function update_input_settings {
+        curl -i -s -u "axibase:axibase" \
+            http://127.0.0.1:8088/admin/inputsettings \
+            --data-urlencode "commandLogEnabled=on" \
+            --data-urlencode "csvEnabled=on" \
+            --data-urlencode "hbaseWriteEnabled=on" \
+            --data-urlencode "lastInsertEnabled=on" \
+            --data-urlencode "lastInsertHbaseWriteEnabled=on" \
+            --data-urlencode "lastInsertStatisticsEnabled=on" \
+            --data-urlencode "malformedLogEnabled=on" \
+            --data-urlencode "messageEnabled=on" \
+            --data-urlencode "metricEnabled=on" \
+            --data-urlencode "propertyEnabled=on" \
+            --data-urlencode "ruleEnabled=on" \
+            --data-urlencode "update-gateway=Update"
+    }
+
     function post_start {
         if [ -f "$FIRST_START_MARKER" ]; then
             set_tz
@@ -595,6 +612,7 @@ function start_atsd {
             configure_email
             configure_telegram_notifications
             configure_slack_notifications
+            update_input_settings
         fi
     }
 
@@ -661,12 +679,12 @@ function start_collector {
 
     if [ -e "$DOCKER_SOCKET" ]; then
         validate_docker_socket
-        JOB_ENABLE=-job-enable=docker-socket
         collector_execute_arg=$(concat_with "$collector_execute_arg" , docker-socket)
     fi
     start_cron
 
     if [ -n "$collector_execute_arg" ]; then
+        JOB_ENABLE=-job-enable="$collector_execute_arg"
         JOB_EXECUTE=-job-execute="$collector_execute_arg"
         WAIT_EXEC="wait-exec"
     fi

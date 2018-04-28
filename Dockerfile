@@ -22,6 +22,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
   && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y atsd wget unzip cron nano iproute2 file \
   && rm -rf /var/lib/apt/lists/* \
   && sed -i '/.*hbase.cluster.distributed.*/{n;s/.*/   <value>false<\/value>/}' /opt/atsd/hbase/conf/hbase-site.xml \
+  && sed -i 's/\(max_tries_count=\).\+/\130/' /opt/atsd/bin/atsd-hbase.sh \
   && wget -O /tmp/phantomjs.tar.gz https://axibase.com/public/phantomjs-2.1.1-linux-x86_64.tar.gz \
   && tar xzvf /tmp/phantomjs.tar.gz -C /opt/atsd \
   && /tmp/atsd-init.sh \
