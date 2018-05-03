@@ -117,6 +117,14 @@ function contains {
     return ${result}
 }
 
+function is_enabled {
+    local value=$1
+    if [ -z "$value" ] || [[ "$value" =~ ^(on|true)$ ]]; then
+        return 0
+    fi
+    return 1
+}
+
 function resolve_file {
     function download_or_fail {
         local url=$1
@@ -316,7 +324,7 @@ function prepare_import {
         if [ -n "$ATSD_IMPORT_PATH" ]; then
             prepare_import_by_spec "$ATSD_IMPORT_PATH" update_atsd_import_list
         fi
-        if [ -n "$COLLECTOR_IMPORT_PATH" ]; then
+        if [ -n "$COLLECTOR_IMPORT_PATH" ] && is_enabled "$START_COLLECTOR"; then
             prepare_import_by_spec "$COLLECTOR_IMPORT_PATH" update_collector_argument
             JOB_PATH=-job-path="$collector_import_arg"
             update_import_configs
@@ -750,7 +758,11 @@ function wait_loop {
 prepare_import
 start_atsd
 start_collectd
-start_collector
+
+if is_enabled "$START_COLLECTOR"; then
+    start_collector
+fi
+
 echo 'All applications started'
 if [ -f "$FIRST_START_MARKER" ]; then
     rm "$FIRST_START_MARKER"

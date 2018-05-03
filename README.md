@@ -57,6 +57,7 @@ Open the user account page in ATSD by clicking on the account icon in the upper-
 | `SLACK_CONFIG` | Path to a file with [Slack Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) configuration parametres |
 | `TELEGRAM_CONFIG` | Path to a file with [Telegram Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) configuration parametres |
 | `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
+| `START_COLLECTOR` | Enable or disable **Collector** start |
 
 ### Path Formats
 
@@ -307,9 +308,9 @@ Instructions can be specified as follows:
 
 The XML file update involves replacement of XML tag values, identified with `key`, with new values, for example:
 
-  ```sh
-  --env COLLECTOR_CONFIG='marathon-jobs.xml:server=mar1.example.com,userName=netops,password=1234456'
-  ```
+```sh
+--env COLLECTOR_CONFIG='marathon-jobs.xml:server=mar1.example.com,userName=netops,password=1234456'
+```
 
 - Before
   ```xml
@@ -325,7 +326,18 @@ The XML file update involves replacement of XML tag values, identified with `key
   <userName>netops</userName>
   <password>1234456</password>  
   ```
-  
+
+### Collector Start Control
+
+`START_COLLECTOR` variable enables or disables Collector start.
+
+* `on` and `true` values enable start (default).
+* `off` and `false` disable start.
+
+```sh
+--env COLLECTOR_CONFIG=off
+```
+
 ### Parameters Syntax
 
 The variables must not contain whitespace characters.
@@ -340,8 +352,8 @@ Semicolons and commas in file names, URLs, key and values must be escaped by `\`
 
 Variables `WEBHOOK`, `SERVER_URL`, `EMAIL_CONFIG` do not require special escaping for `,` and `;`.
 
-   ```
-   ... --env COLLECTOR_CONFIG='config.xml:password=password\,with\;separators' ...
-   ```
+```
+--env COLLECTOR_CONFIG='config.xml:password=password\,with\;separators'
+```
 
 Additional escaping might be required depending on the shell type and version.
