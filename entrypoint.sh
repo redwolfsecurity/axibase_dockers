@@ -22,6 +22,7 @@ FIRST_START_MARKER="/first-start"
 IMPORT_DIR="/import"
 TMP_IMPORT_DIR="/tmp/import"
 TMP_DOWNLOAD_DIR="/tmp/import-download"
+TMP_EXTRACT_DIR="/tmp/extract"
 DOCKER_SOCKET="/var/run/docker.sock"
 
 ATSD_ADMIN_USER_NAME=axibase
@@ -225,12 +226,16 @@ function prepare_import {
         telegram_form["$key"]="$value"
     }
 
+    function mime_of {
+        file --brief --mime-type "$1"
+    }
+
     function configure_from_file {
         local config_func=$1
         local file_path=$2
         local file_to_edit=$3
         local file_with_updates=$4
-        local mime_type=$(file --brief --mime-type "$file_with_updates")
+        local mime_type=$(mime_of "$file_with_updates")
         if ! [[ "$mime_type" =~ text/* ]]; then
             echo "ERROR: Bad file format or encoding '$file_with_updates'" >&2
             exit 1
@@ -246,14 +251,75 @@ function prepare_import {
     function prepare_import_by_spec {
         local import_spec=$1
         local import_func=$2
+        local allow_archives=$3
         mkdir -p "$IMPORT_DIR"
         mkdir -p "$TMP_DOWNLOAD_DIR"
         for current_path in ${import_spec//,/ }; do
             resolve_file "$current_path"
-            configure_from_file update_env "$import_path" "" "/tmp/.env"
-            ${import_func} "$import_path"
+            if [ "$allow_archives" = true ]; then
+                prepare_container_file ${import_func} "$import_path"
+            else
+                prepare_single_file ${import_func} "$import_path"
+            fi
         done
         rm -rf "$TMP_DOWNLOAD_DIR"
+    }
+
+    function prepare_single_file {
+        local import_func=$1
+        local import_path=$2
+        configure_from_file update_env "$import_path" "" "/tmp/.env"
+        ${import_func} "$import_path"
+    }
+
+    function prepare_extracted {
+        local import_func=$1
+        local file_list=$(find "$TMP_EXTRACT_DIR")
+        for file in ${file_list}; do
+            if [ -f "$file" ]; then
+                local file_name=$(basename "$file")
+                local relative_path=${file#$"$TMP_EXTRACT_DIR"/}
+                local relative_dir=$(dirname "$relative_path")
+                local new_import_dir="$TMP_IMPORT_DIR"/"$relative_dir"
+                local new_import_path="$TMP_IMPORT_DIR"/"$relative_path"
+                mkdir -p "$new_import_dir"
+                mv "$file" "$new_import_path"
+                prepare_single_file ${import_func} "$new_import_path"
+            fi
+        done
+    }
+
+    function prepare_container_file {
+        local import_func=$1
+        local file_path=$2
+        local mime_type=$(mime_of "$file_path")
+        case "$mime_type" in
+            application/zip)
+                mkdir "$TMP_EXTRACT_DIR"
+                if ! unzip "$file_path" -d "$TMP_EXTRACT_DIR" > /dev/null; then
+                    echo "ERROR: Failed to extract archive '$file_path'" >&2
+                    exit 1
+                fi
+                prepare_extracted ${import_func}
+                rm -rf "$TMP_EXTRACT_DIR"
+            ;;
+            application/gzip|application/x-gzip)
+                mkdir "$TMP_EXTRACT_DIR"
+                if ! tar xzvf "$file_path" -C "$TMP_EXTRACT_DIR" > /dev/null; then
+                    echo "ERROR: Failed to extract archive '$file_path'" >&2
+                    exit 1
+                fi
+                prepare_extracted ${import_func}
+                rm -rf "$TMP_EXTRACT_DIR"
+            ;;
+            text/*)
+                prepare_single_file ${import_func} "$import_path"
+            ;;
+            *)
+                echo "ERROR: Unknown format '$mime_type' of file '$file_path'" >&2
+                exit 1
+            ;;
+        esac
     }
 
     function update_entry {
@@ -322,10 +388,10 @@ function prepare_import {
 
         mkdir -p "$TMP_IMPORT_DIR"
         if [ -n "$ATSD_IMPORT_PATH" ]; then
-            prepare_import_by_spec "$ATSD_IMPORT_PATH" update_atsd_import_list
+            prepare_import_by_spec "$ATSD_IMPORT_PATH" update_atsd_import_list true
         fi
         if [ -n "$COLLECTOR_IMPORT_PATH" ] && is_enabled "$START_COLLECTOR"; then
-            prepare_import_by_spec "$COLLECTOR_IMPORT_PATH" update_collector_argument
+            prepare_import_by_spec "$COLLECTOR_IMPORT_PATH" update_collector_argument false
             JOB_PATH=-job-path="$collector_import_arg"
             update_import_configs
         fi
@@ -592,7 +658,7 @@ function start_atsd {
     }
 
     function update_input_settings {
-        curl -i -s -u "axibase:axibase" \
+        curl -s -u "axibase:axibase" \
             http://127.0.0.1:8088/admin/inputsettings \
             --data-urlencode "commandLogEnabled=on" \
             --data-urlencode "csvEnabled=on" \
@@ -605,7 +671,7 @@ function start_atsd {
             --data-urlencode "metricEnabled=on" \
             --data-urlencode "propertyEnabled=on" \
             --data-urlencode "ruleEnabled=on" \
-            --data-urlencode "update-gateway=Update"
+            --data-urlencode "update-gateway=Update" > /dev/null
     }
 
     function post_start {

@@ -338,6 +338,8 @@ The XML file update involves replacement of XML tag values, identified with `key
 --env COLLECTOR_CONFIG=off
 ```
 
+This setting applies to the first and all subsequent container starts.
+
 ### Parameters Syntax
 
 The variables must not contain whitespace characters.
