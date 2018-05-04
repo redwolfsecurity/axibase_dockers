@@ -383,6 +383,22 @@ function prepare_import {
         fi
     }
 
+    function check_simplified_configuration {
+        if [ -n "$SLACK_TOKEN" ]; then
+            configure_slack_form_field "" "" "token" "$SLACK_TOKEN"
+        fi
+        if [ -n "$SLACK_CHANNELS" ]; then
+            configure_slack_form_field "" "" "channels" "$SLACK_CHANNELS"
+        fi
+
+        if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+            configure_telegram_form_field "" "" "bot_token" "$TELEGRAM_BOT_TOKEN"
+        fi
+        if [ -n "$TELEGRAM_CHAT_ID" ]; then
+            configure_telegram_form_field "" "" "chat_id" "$TELEGRAM_CHAT_ID"
+        fi
+    }
+
     if [ -f "$FIRST_START_MARKER" ]; then
         check_server_url
 
@@ -421,6 +437,7 @@ function prepare_import {
             local slack_config_file="$import_path"
             configure_from_file configure_slack_form_field "" "" "$slack_config_file"
         fi
+        check_simplified_configuration
     fi
 }
 
@@ -598,12 +615,12 @@ function start_atsd {
     }
 
     function configure_telegram_notifications {
-        if [ -n "$TELEGRAM_CONFIG" ]; then
+        if [ -n "$TELEGRAM_CONFIG" ] || [ -n "$TELEGRAM_BOT_TOKEN" ]; then
             echo "[ATSD] Configure Telegram Web Notifications."
             local curl_request="-s -u "axibase:axibase" \
                 --data-urlencode "contentType=application/x-www-form-urlencoded" \
                 --data-urlencode "parameterModels[0].key=bot_id" \
-                --data-urlencode "parameterModels[0].value=${telegram_form["bot_id"]}" \
+                --data-urlencode "parameterModels[0].value=${telegram_form["bot_token"]}" \
                 --data-urlencode "parameterModels[1].key=chat_id" \
                 --data-urlencode "parameterModels[1].value=${telegram_form["chat_id"]}" \
                 --data-urlencode "parameterModels[2].key=text" \
@@ -619,7 +636,10 @@ function start_atsd {
                 --data-urlencode "chatType=TELEGRAM""
             curl ${curl_request} --data-urlencode "save=Save" \
                 http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram &> /dev/null
-            local response_status=$(curl ${curl_request} --data-urlencode "test=Test" \
+            local response_status=$(curl ${curl_request} \
+                --data-urlencode "test=Test" \
+                --data-urlencode "parameterModels[5].key=text" \
+                --data-urlencode "parameterModels[5].value=Test message from ATSD \${server.url}." \
                 http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram |& \
                 sed -n "/response-status/{s/[^>]\+>\([^<]\+\).*/\1/p}")
             if [ -z "$response_status" ]; then
@@ -631,7 +651,7 @@ function start_atsd {
     }
 
     function configure_slack_notifications {
-        if [ -n "$SLACK_CONFIG" ]; then
+        if [ -n "$SLACK_CONFIG" ] || [ -n "$SLACK_TOKEN" ]; then
             echo "[ATSD] Configure Slack Web Notifications."
             local curl_request="-s -u "axibase:axibase" \
                 --data-urlencode "contentType=application/x-www-form-urlencoded" \
@@ -646,7 +666,10 @@ function start_atsd {
                 --data-urlencode "chatType=SLACK""
             curl ${curl_request} --data-urlencode "save=Save" \
                 http://127.0.0.1:8088/admin/web-notifications/slack/Slack &> /dev/null
-            local response_status=$(curl ${curl_request} --data-urlencode "test=Test" \
+            local response_status=$(curl ${curl_request} \
+                --data-urlencode "parameterModels[3].key=text" \
+                --data-urlencode "parameterModels[3].value=Test message from ATSD \${server.url}." \
+                --data-urlencode "test=Test" \
                 http://127.0.0.1:8088/admin/web-notifications/slack/Slack |& \
                 sed -n "/response-status/{s/[^>]\+>\([^<]\+\).*/\1/p}")
             if [ -z "$response_status" ]; then
