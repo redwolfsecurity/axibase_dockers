@@ -136,7 +136,7 @@ To ensure that the XML file remains valid after the variable substitution, wrap 
 <attr><![CDATA[${ENV.NAMESPACE}]]></attr>
 ```
 
-If no corresponding environment variable is defined for a placeholder specified in the file, the placeholder will be retained `as is`.
+If no corresponding environment variable is defined for a placeholder specified in the file, the placeholder will be retained 'as is'.
 
 ### Mail Client Configuration
 
@@ -245,15 +245,15 @@ Configuration properties for `TELEGRAM_CONFIG`:
 
 | Property | Varialbe | Description |
 |----------|----------|-------------|
-| `bot_token` | TELEGRAM_BOT_TOKEN | **Required** Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
-| `chat_id` | TELEGRAM_CHAT_ID | **Required** Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
+| `bot_token` | `TELEGRAM_BOT_TOKEN` | **Required** Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
+| `chat_id` | `TELEGRAM_CHAT_ID` | **Required** Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
 
 Configuration properties for `SLACK_CONFIG`:
 
 | Property | Varialbe | Description |
 |----------|----------|-------------|
-| `token` | SLACK_TOKEN | **Required** Slack bot authentication token. See [instruction](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md#add-bot-to-channel) on how to acquire it. |
-| `channels` | SLACK_CHANNELS | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. Default value is `general`. |
+| `token` | `SLACK_TOKEN` | **Required** Slack bot authentication token. See [instruction](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md#add-bot-to-channel) on how to acquire it. |
+| `channels` | `SLACK_CHANNELS` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. Default value is `general`. |
 
 #### Example configuration for Telegram
 
