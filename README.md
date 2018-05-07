@@ -54,10 +54,14 @@ Open the user account page in ATSD by clicking on the account icon in the upper-
 | `SERVER_URL` | ATSD web interface URL, including schema, hostname, and port, for example: `https://atsd.company_name.com:8443`. |
 | `WEBHOOK` | Create webhook users from predefined set of templates, separated by comma |
 | `EMAIL_CONFIG` | Path to a file with Mail Client configuration parameters |
-| `SLACK_CONFIG` | Path to a file with [Slack Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) configuration parametres |
 | `TELEGRAM_CONFIG` | Path to a file with [Telegram Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) configuration parametres |
-| `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot API token. See [Web Notifications Configuration](#web-notifications-configuration) for details |
+| `TELEGRAM_CHAT_ID` | Telegram chat ID. See [Web Notifications Configuration](#web-notifications-configuration) for details |
+| `SLACK_CONFIG` | Path to a file with [Slack Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) configuration parametres |
 | `START_COLLECTOR` | Enable or disable **Collector** start |
+| `SLACK_TOKEN` | Slack bot authentication token. See [Web Notifications Configuration](#web-notifications-configuration) for details |
+| `SLACK_CHANNELS` | Slack channels. See [Web Notifications Configuration](#web-notifications-configuration) for details |
+| `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
 
 ### Path Formats
 
@@ -132,7 +136,7 @@ To ensure that the XML file remains valid after the variable substitution, wrap 
 <attr><![CDATA[${ENV.NAMESPACE}]]></attr>
 ```
 
-If no corresponding environment variable is defined for a placeholder specified in the file, the placeholder will be retained `as is`.
+If no corresponding environment variable is defined for a placeholder specified in the file, the placeholder will be retained 'as is'.
 
 ### Mail Client Configuration
 
@@ -233,42 +237,105 @@ Webhook URL: https://github:9pYV2hxn@atsd.company_name.com:8443/api/v1/messages/
 
 ### Web Notifications Configuration
 
-`TELEGRAM_CONFIG` and `SLACK_CONFIG` variables specify path to the files with configuration parameters for [Telegram](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) and [Slack](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) Web Notifications respectively.
+`TELEGRAM_CONFIG` and `SLACK_CONFIG` variables specify path to the files with configuration parameters for [Telegram](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) and [Slack](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) Web Notifications respectively. Alternatively, environment varaibles can be used instead of configuration files.
 
 File format is the same as for `EMAIL_CONFIG` variable.
 
 Configuration properties for `TELEGRAM_CONFIG`:
 
-| Property | Description |
-|----------|-------------|
-| `bot_id` | **Required** Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
-| `chat_id` | **Required** Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
+| Property | Varialbe | Description |
+|----------|----------|-------------|
+| `bot_token` | `TELEGRAM_BOT_TOKEN` | **Required** Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
+| `chat_id` | `TELEGRAM_CHAT_ID` | **Required** Unique identifier for the target chat or username of the target channel (in the format @channelusername). |
 
 Configuration properties for `SLACK_CONFIG`:
 
-| Property | Description |
-|----------|-------------|
-| `token` | **Required** Slack bot authentication token. |
-| `channels` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. Default value is `general`. |
+| Property | Varialbe | Description |
+|----------|----------|-------------|
+| `token` | `SLACK_TOKEN` | **Required** Slack bot authentication token. See [instruction](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md#add-bot-to-channel) on how to acquire it. |
+| `channels` | `SLACK_CHANNELS` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. Default value is `general`. |
 
-Configuration example for Slack:
+#### Sample configuration for Telegram
+
+Contents of `/home/user/import/telegram.properties` configuration file
+
+```ls
+bot_token=*********:***********************************
+chat_id=-NNNNNNNNN
+```
+
+Run command
 
 ```sh
-cat /home/user/import/slack_properties
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+  --volume /home/user/import:/import
+  --name=atsd-sandbox \
+  --env SERVER_URL=https://atsd.company_name.com:8443
+  --env TELEGRAM_CONFIG=telegram.properties
+  axibase/atsd-sandbox:latest
 ```
+
+Alternative run command without configuration file
+
+```sh
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081
+  --name=atsd-sandbox \
+  --env SERVER_URL=https://atsd.company_name.com:8443
+  --env TELEGRAM_BOT_TOKEN="*********:***********************************"
+  --env TELEGRAM_CHAT_ID="-NNNNNNNNN"
+  axibase/atsd-sandbox:latest
+```
+
+Test message
+
+![Telegram Message Screenshot](resources/telegram_message.png)
+
+Configuration form for Telegram Web Notification located at https://atsd_host:8443/admin/web-notifications/telegram/Telegram
+
+![Telegram Configuration Screenshot](resources/telegram_notifications.png)
+
+Use **Test** button to test the configuration.
+
+#### Sample configuration for Slack
+
+Contents of `/home/user/import/slack.properties` configuration file
 
 ```ls
 token=xoxb-************-************************
 channels=general,devops
 ```
 
+Run command
+
 ```sh
 docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
   --volume /home/user/import:/import
   --name=atsd-sandbox \
+  --env SERVER_URL=https://atsd.company_name.com:8443
   --env SLACK_CONFIG="slack.properties"
   axibase/atsd-sandbox:latest
 ```
+
+Alternative run command without configuration file
+
+```sh
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081
+  --name=atsd-sandbox \
+  --env SERVER_URL=https://atsd.company_name.com:8443
+  --env SLACK_TOKEN="xoxb-************-************************"
+  --env SLACK_CHANNELS="general,devops"
+  axibase/atsd-sandbox:latest
+```
+
+Test message
+
+![Slack Message Screenshot](resources/slack_message.png)
+
+Configuration form for Slack Web Notification located at https://atsd_host:8443/admin/web-notifications/slack/Slack
+
+![Slack Configuration Screenshot](resources/slack_notifications.png)
+
+Use **Test** button to test the configuration.
 
 ### Job Configuration Parameters
 
@@ -306,7 +373,7 @@ Instructions can be specified as follows:
      axibase/atsd-sandbox:latest
    ```
 
-The XML file update involves replacement of XML tag values, identified with `key`, with new values, for example:
+The XML file update involves replacements of XML tag values, identified with `key`, with new values, for example:
 
 ```sh
 --env COLLECTOR_CONFIG='marathon-jobs.xml:server=mar1.example.com,userName=netops,password=1234456'
