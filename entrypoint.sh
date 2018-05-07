@@ -639,7 +639,7 @@ function start_atsd {
             local response_status=$(curl ${curl_request} \
                 --data-urlencode "test=Test" \
                 --data-urlencode "parameterModels[5].key=text" \
-                --data-urlencode "parameterModels[5].value=Test message from ATSD \${server.url}." \
+                --data-urlencode "parameterModels[5].value=Test message from ATSD \${serverLink}." \
                 http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram |& \
                 sed -n "/response-status/{s/[^>]\+>\([^<]\+\).*/\1/p}")
             if [ -z "$response_status" ]; then
@@ -668,7 +668,7 @@ function start_atsd {
                 http://127.0.0.1:8088/admin/web-notifications/slack/Slack &> /dev/null
             local response_status=$(curl ${curl_request} \
                 --data-urlencode "parameterModels[3].key=text" \
-                --data-urlencode "parameterModels[3].value=Test message from ATSD \${server.url}." \
+                --data-urlencode "parameterModels[3].value=Test message from ATSD \${serverLink}." \
                 --data-urlencode "test=Test" \
                 http://127.0.0.1:8088/admin/web-notifications/slack/Slack |& \
                 sed -n "/response-status/{s/[^>]\+>\([^<]\+\).*/\1/p}")

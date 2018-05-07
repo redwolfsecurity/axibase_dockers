@@ -54,14 +54,14 @@ Open the user account page in ATSD by clicking on the account icon in the upper-
 | `SERVER_URL` | ATSD web interface URL, including schema, hostname, and port, for example: `https://atsd.company_name.com:8443`. |
 | `WEBHOOK` | Create webhook users from predefined set of templates, separated by comma |
 | `EMAIL_CONFIG` | Path to a file with Mail Client configuration parameters |
-| `SLACK_CONFIG` | Path to a file with [Slack Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) configuration parametres |
 | `TELEGRAM_CONFIG` | Path to a file with [Telegram Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) configuration parametres |
-| `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
-| `START_COLLECTOR` | Enable or disable **Collector** start |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot API token. See [Web Notifications Configuration](#web-notifications-configuration) for details |
 | `TELEGRAM_CHAT_ID` | Telegram chat ID. See [Web Notifications Configuration](#web-notifications-configuration) for details |
+| `SLACK_CONFIG` | Path to a file with [Slack Web Notification](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) configuration parametres |
+| `START_COLLECTOR` | Enable or disable **Collector** start |
 | `SLACK_TOKEN` | Slack bot authentication token. See [Web Notifications Configuration](#web-notifications-configuration) for details |
 | `SLACK_CHANNELS` | Slack channels. See [Web Notifications Configuration](#web-notifications-configuration) for details |
+| `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
 
 ### Path Formats
 
@@ -255,7 +255,7 @@ Configuration properties for `SLACK_CONFIG`:
 | `token` | `SLACK_TOKEN` | **Required** Slack bot authentication token. See [instruction](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md#add-bot-to-channel) on how to acquire it. |
 | `channels` | `SLACK_CHANNELS` | Comma-separated list of channels, private groups, or IM channels to send message to. Each entry can be an encoded ID, or a name. Default value is `general`. |
 
-#### Example configuration for Telegram
+#### Sample configuration for Telegram
 
 Contents of `/home/user/import/telegram.properties` configuration file
 
@@ -290,7 +290,13 @@ Test message
 
 ![Telegram Message Screenshot](resources/telegram_message.png)
 
-#### Example configuration for Slack
+Configuration form for Telegram Web Notification located at https://atsd_host:8443/admin/web-notifications/telegram/Telegram
+
+![Telegram Configuration Screenshot](resources/telegram_notifications.png)
+
+Use **Test** button to test the configuration.
+
+#### Sample configuration for Slack
 
 Contents of `/home/user/import/slack.properties` configuration file
 
@@ -324,6 +330,12 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081
 Test message
 
 ![Slack Message Screenshot](resources/slack_message.png)
+
+Configuration form for Slack Web Notification located at https://atsd_host:8443/admin/web-notifications/slack/Slack
+
+![Slack Configuration Screenshot](resources/slack_notifications.png)
+
+Use **Test** button to test the configuration.
 
 ### Job Configuration Parameters
 
