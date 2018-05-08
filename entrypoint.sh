@@ -312,7 +312,7 @@ function prepare_import {
                 prepare_extracted ${import_func}
                 rm -rf "$TMP_EXTRACT_DIR"
             ;;
-            text/*)
+            application/xml|text/*)
                 prepare_single_file ${import_func} "$import_path"
             ;;
             *)
