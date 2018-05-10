@@ -91,6 +91,12 @@ function xml_escape {
     echo "$str_to_escape" | sed "s/\&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g;s/'/\&apos;/g;s/\"/\&quot;/g"
 }
 
+function xml_unescape {
+    local str_to_escape=$1
+    # Unescape & < > ' " symbols
+    echo "$str_to_escape" | sed "s/\&amp;/\&/g;s/\&lt;/</g;s/\&gt;/>/g;s/\&apos;/'/g;s/\&quot;/\"/g"
+}
+
 function sed_escape {
     local str_to_escape=$1
     # Escape '\', '/' and '&' symbols
@@ -124,6 +130,11 @@ function is_enabled {
         return 0
     fi
     return 1
+}
+
+function html_extract_text {
+    local mark="$1"
+    sed -n "/$mark/{s/[^>]\+>\([^<]\+\).*/\1/p;q}"
 }
 
 function resolve_file {
@@ -616,6 +627,14 @@ function start_atsd {
 
     function configure_telegram_notifications {
         if [ -n "$TELEGRAM_CONFIG" ] || [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+            if [ -z ${telegram_form["bot_token"]} ]; then
+                echo "[ATSD] WARNING: Can't configure Telegram Web Notification, empty bot API token"
+                return
+            fi
+            if [ -z ${telegram_form["chat_id"]} ]; then
+                echo "[ATSD] WARNING: Can't configure Telegram Web Notification, empty chat ID"
+                return
+            fi
             echo "[ATSD] Configure Telegram Web Notifications."
             local curl_request="-s -u "axibase:axibase" \
                 --data-urlencode "contentType=application/x-www-form-urlencoded" \
@@ -636,22 +655,36 @@ function start_atsd {
                 --data-urlencode "chatType=TELEGRAM""
             curl ${curl_request} --data-urlencode "save=Save" \
                 http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram &> /dev/null
-            local response_status=$(curl ${curl_request} \
+            local response=$(curl ${curl_request} \
                 --data-urlencode "test=Test" \
                 --data-urlencode "parameterModels[5].key=text" \
                 --data-urlencode "parameterModels[5].value=Test message from ATSD \${serverLink}." \
-                http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram |& \
-                sed -n "/response-status/{s/[^>]\+>\([^<]\+\).*/\1/p}")
+                http://127.0.0.1:8088/admin/web-notifications/telegram/Telegram |& cat)
+            local response_status=$(echo "$response" | html_extract_text "response-status")
             if [ -z "$response_status" ]; then
+                local error=$(echo "$response" | html_extract_text 'span class="error"')
                 echo "[ATSD]   Telegram Web Notification test failed."
+                echo "[ATSD]   Error: $error"
             else
                 echo "[ATSD]   Telegram Web Notification test status: $response_status."
+                local msg_response=$(xml_unescape $(echo "$response" | html_extract_text 'textarea id="msg-response-body"'))
+                if echo "$msg_response" | grep -q '"ok":false'; then
+                    echo "$msg_response"
+                fi
             fi
         fi
     }
 
     function configure_slack_notifications {
         if [ -n "$SLACK_CONFIG" ] || [ -n "$SLACK_TOKEN" ]; then
+            if [ -z ${slack_form["token"]} ]; then
+                echo "[ATSD] WARNING: Can't configure Slack Web Notification, empty token"
+                return
+            fi
+            if [ -z ${slack_form["channels"]} ]; then
+                echo "[ATSD] WARNING: Can't configure Slack Web Notification, empty channels list"
+                return
+            fi
             echo "[ATSD] Configure Slack Web Notifications."
             local curl_request="-s -u "axibase:axibase" \
                 --data-urlencode "contentType=application/x-www-form-urlencoded" \
@@ -666,16 +699,22 @@ function start_atsd {
                 --data-urlencode "chatType=SLACK""
             curl ${curl_request} --data-urlencode "save=Save" \
                 http://127.0.0.1:8088/admin/web-notifications/slack/Slack &> /dev/null
-            local response_status=$(curl ${curl_request} \
+            local response=$(curl ${curl_request} \
                 --data-urlencode "parameterModels[3].key=text" \
                 --data-urlencode "parameterModels[3].value=Test message from ATSD \${serverLink}." \
                 --data-urlencode "test=Test" \
-                http://127.0.0.1:8088/admin/web-notifications/slack/Slack |& \
-                sed -n "/response-status/{s/[^>]\+>\([^<]\+\).*/\1/p}")
+                http://127.0.0.1:8088/admin/web-notifications/slack/Slack |& cat)
+            local response_status=$(echo "$response" | html_extract_text "response-status")
             if [ -z "$response_status" ]; then
+                local error=$(echo "$response" | html_extract_text 'span class="error"')
                 echo "[ATSD]   Slack Web Notification test failed."
+                echo "[ATSD]   Error: $error"
             else
                 echo "[ATSD]   Slack Web Notification test status: $response_status."
+                local msg_response=$(xml_unescape $(echo "$response" | html_extract_text 'textarea id="msg-response-body"'))
+                if echo "$msg_response" | grep -q '"ok":false'; then
+                    echo "$msg_response"
+                fi
             fi
         fi
     }
