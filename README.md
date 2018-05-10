@@ -111,7 +111,7 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
 
 #### Variable Substitution
 
-Environment variable substitution will be performed in each of the imported files. Placeholders should have '${ENV.NAME}' format, where `NAME` is the name of the environment variable.
+Environment variable substitution will be performed in each of the imported files. Placeholders should have `${ENV.NAME}` format, where `NAME` is the name of the environment variable.
 
 For example, the launch command declares a variable `NAMESPACE` and the imported `jobs.xml` file contains a corresponding placeholder `${ENV.NAMESPACE}`.
 
@@ -157,7 +157,7 @@ Supported configuration parameters.
 | `password` | Password of the mailbox user | - |
 | `header` | HTML text to add before message body | - |
 | `footer` | HTML text to add after message body | - |
-| `auth` | Enable authentication | Set to 'on' if `password` specified |
+| `auth` | Enable authentication | Set to `on` if `password` specified |
 | `ssl` | Enable SSL encryption | `on` |
 | `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
 | `test_email` | E-Mail address to send test message on first start | - |
@@ -290,7 +290,7 @@ Test message
 
 ![Telegram Message Screenshot](resources/telegram_message.png)
 
-Configuration form for Telegram Web Notification located at https://atsd_host:8443/admin/web-notifications/telegram/Telegram
+Configuration form for Telegram Web Notification located at `https://atsd_host:8443/admin/web-notifications/telegram/Telegram`
 
 ![Telegram Configuration Screenshot](resources/telegram_notifications.png)
 
@@ -331,7 +331,7 @@ Test message
 
 ![Slack Message Screenshot](resources/slack_message.png)
 
-Configuration form for Slack Web Notification located at https://atsd_host:8443/admin/web-notifications/slack/Slack
+Configuration form for Slack Web Notification located at `https://atsd_host:8443/admin/web-notifications/slack/Slack`
 
 ![Slack Configuration Screenshot](resources/slack_notifications.png)
 
