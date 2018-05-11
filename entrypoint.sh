@@ -666,10 +666,13 @@ function start_atsd {
                 echo "[ATSD]   Telegram Web Notification test failed."
                 echo "[ATSD]   Error: $error"
             else
-                echo "[ATSD]   Telegram Web Notification test status: $response_status."
+                echo "[ATSD]   Telegram Web Notification test "
                 local msg_response=$(xml_unescape $(echo "$response" | html_extract_text 'textarea id="msg-response-body"'))
                 if echo "$msg_response" | grep -q '"ok":false'; then
-                    echo "$msg_response"
+                    echo "failed."
+                    echo "[ATSD]   Error: $msg_response"
+                else
+                    echo "OK."
                 fi
             fi
         fi
@@ -710,10 +713,13 @@ function start_atsd {
                 echo "[ATSD]   Slack Web Notification test failed."
                 echo "[ATSD]   Error: $error"
             else
-                echo "[ATSD]   Slack Web Notification test status: $response_status."
+                echo -n "[ATSD]   Slack Web Notification test "
                 local msg_response=$(xml_unescape $(echo "$response" | html_extract_text 'textarea id="msg-response-body"'))
                 if echo "$msg_response" | grep -q '"ok":false'; then
-                    echo "$msg_response"
+                    echo "failed."
+                    echo "[ATSD]   Error: $msg_response"
+                else
+                    echo "OK."
                 fi
             fi
         fi
