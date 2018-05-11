@@ -337,6 +337,26 @@ Configuration form for Slack Web Notification located at `https://atsd_host:8443
 
 Use **Test** button to test the configuration.
 
+#### Test status
+
+On the first start configurations will be tested by sending test message and status will be reported into start log.
+Whenever test fails, the error cause will be printed too.
+
+Successful test:
+
+```text
+[ATSD] Configure Slack Web Notifications.
+[ATSD]   Slack Web Notification test failed.
+[ATSD]   Error: {"ok":false,"error":"invalid_auth"}
+```
+
+Failed test:
+
+```text
+[ATSD] Configure Slack Web Notifications.
+[ATSD]   Slack Web Notification test OK.
+```
+
 ### Job Configuration Parameters
 
 `COLLECTOR_CONFIG` is the semicolon-separated sequence of instructions to edit configuration files imported into Collector. 
