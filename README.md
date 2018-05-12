@@ -210,41 +210,41 @@ Alternatively, use configuration files to pass these variables into the containe
 
 * Slack
 
-Configuration properties for `SLACK_CONFIG`:
+  Configuration properties for `SLACK_CONFIG`:
 
-| Property | Variable |
-|----------|----------|
-| `token` | `SLACK_TOKEN` |
-| `channels` | `SLACK_CHANNELS` |
+  | Property | Variable |
+  |----------|----------|
+  | `token` | `SLACK_TOKEN` |
+  | `channels` | `SLACK_CHANNELS` |
 
-Contents of `/home/user/import/slack.properties` file.
+  Contents of `/home/user/import/slack.properties` file.
 
-```ls
-token=xoxb-************-************************
-channels=general,devops
-```
+  ```ls
+  token=xoxb-************-************************
+  channels=general,devops
+  ```
 
-```sh
-docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
-  --volume /home/user/import:/import
-  --name=atsd-sandbox \
-  --env SLACK_CONFIG=slack.properties
-  axibase/atsd-sandbox:latest
-```
+  ```sh
+  docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+    --volume /home/user/import:/import
+    --name=atsd-sandbox \
+    --env SLACK_CONFIG=slack.properties
+    axibase/atsd-sandbox:latest
+  ```
 
 * Telegram
 
-Configuration properties for `TELEGRAM_CONFIG`:
+  Configuration properties for `TELEGRAM_CONFIG`:
 
-| Property | Variable |
-|----------|----------|
-| `bot_token` | `TELEGRAM_BOT_TOKEN` | 
-| `chat_id` | `TELEGRAM_CHAT_ID` |
+  | Property | Variable |
+  |----------|----------|
+  | `bot_token` | `TELEGRAM_BOT_TOKEN` |
+  | `chat_id` | `TELEGRAM_CHAT_ID` |
 
-```ls
-bot_token=*********:***********************************
-chat_id=-NNNNNNNNN
-```
+  ```ls
+  bot_token=*********:***********************************
+  chat_id=-NNNNNNNNN
+  ```
 
 #### Outgoing Webhook Tests
 
@@ -252,24 +252,24 @@ The configured web notifications will be tested on initial start by sending a te
 
 * Successful test:
 
-```text
-[ATSD] Configure Slack Web Notifications.
-[ATSD]   Slack Web Notification test OK.
-```
+  ```text
+  [ATSD] Configure Slack Web Notifications.
+  [ATSD]   Slack Web Notification test OK.
+  ```
 
 * Sample test messages:
 
-![Slack Message Screenshot](resources/slack_message.png)
+  ![Slack Message Screenshot](resources/slack_message.png)
 
-![Telegram Message Screenshot](resources/telegram_message.png)
+  ![Telegram Message Screenshot](resources/telegram_message.png)
 
 * Failed test:
 
-```text
-[ATSD] Configure Slack Web Notifications.
-[ATSD]   Slack Web Notification test failed.
-[ATSD]   Error: {"ok":false,"error":"invalid_auth"}
-```
+  ```text
+  [ATSD] Configure Slack Web Notifications.
+  [ATSD]   Slack Web Notification test failed.
+  [ATSD]   Error: {"ok":false,"error":"invalid_auth"}
+  ```
 
 ### Mail Client Configuration
 
