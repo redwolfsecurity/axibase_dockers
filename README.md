@@ -44,6 +44,8 @@ By default, new user credentials will be set as follows:
 
 Open the user account page in ATSD by clicking on the account icon in the upper-right corner of the screen to modify credentials after intial login.
 
+![User Link](resources/user.png)
+
 ## Container Parameters
 
 | Variable Name | Description |
