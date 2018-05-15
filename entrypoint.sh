@@ -640,6 +640,8 @@ function start_atsd {
                 local err_message=$(echo "$test_response" | html_extract_text 'span style="color:red"' | xml_unescape)
                 if [ -n "$err_message" ]; then
                     echo "[ATSD] Mail Client test failed: $err_message"
+                else
+                    echo "[ATSD] Mail Client test successful."
                 fi
             fi
         fi

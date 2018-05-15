@@ -39,9 +39,8 @@ docker logs -f atsd-sandbox
 
 By default, new user credentials will be set as follows:
 
-`username: axibase`
-
-`password: axibase`
+* Username `axibase`
+* Password `axibase`
 
 Open the user account page in ATSD by clicking on the account icon in the upper-right corner of the screen to modify credentials after intial login.
 
@@ -186,7 +185,7 @@ Webhook URL: https://telegram:mYz4Peov@atsd.company_name.com:8443/api/v1/message
 
 ### Outgoing Webhooks
 
-Use the following environment variables to configure outgoing webhooks for Slack and Telegram notifications.
+The following environment variables configure outgoing webhooks for Slack and Telegram notifications.
 
 | Variable | Description |
 |----------|-------------|
@@ -204,7 +203,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081
   axibase/atsd-sandbox:latest
 ```
 
-Alternatively, use configuration files to pass these variables into the container using property name format.
+Alternatively, configuration files can be used instead of environment variables.
 
 `SLACK_CONFIG` and `TELEGRAM_CONFIG` variables specify path to the files with configuration parameters for [Slack](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/slack.md) and [Telegram](https://github.com/axibase/atsd/blob/master/rule-engine/notifications/telegram.md) respectively. File format is the same as for `EMAIL_CONFIG` variable.
 
@@ -217,12 +216,14 @@ Alternatively, use configuration files to pass these variables into the containe
   | `token` | `SLACK_TOKEN` |
   | `channels` | `SLACK_CHANNELS` |
 
-  Contents of `/home/user/import/slack.properties` file.
+  Contents of `/home/user/import/slack.properties` file:
 
   ```ls
   token=xoxb-************-************************
   channels=general,devops
   ```
+
+  Container `run` command:
 
   ```sh
   docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
@@ -248,22 +249,22 @@ Alternatively, use configuration files to pass these variables into the containe
 
 #### Outgoing Webhook Tests
 
-The configured web notifications will be tested on initial start by sending a test message. Test results will be printed in the start log.
+The configured web notifications will be tested on initial start by sending a test message. Test results will be printed to the start log.
 
-* Successful test:
+* Successful test
 
   ```text
   [ATSD] Configure Slack Web Notifications.
   [ATSD]   Slack Web Notification test OK.
   ```
 
-* Sample test messages:
+* Sample test messages
 
   ![Slack Message Screenshot](resources/slack_message.png)
 
   ![Telegram Message Screenshot](resources/telegram_message.png)
 
-* Failed test:
+* Failed test
 
   ```text
   [ATSD] Configure Slack Web Notifications.
@@ -284,7 +285,7 @@ Supported configuration parameters.
 | `enable` | Enable E-Mail notifications | `on` |
 | `server_name` | Server specified in the "From" field, for example `My ATSD Server` | `Axibase TSD` |
 | `server` | **Required** Hostname or IP address of your mail server, for example smtp.example.com | - |
-| `port` | Mail server port | 587 |
+| `port` | Mail server port | `587` |
 | `sender` | Address specified in the "From" field, for example notify@example.com | Copied from `user` property |
 | `user` | **Required** Username of the mailbox user | - |
 | `password` | Password of the mailbox user | - |
@@ -297,32 +298,47 @@ Supported configuration parameters.
 
 These parameters can be set to `on`/`off` or `true`/`false`: `enable`, `auth`, `ssl`, `upgrade_ssl`.
 
-Sample configuration:
+#### Usage example
 
-```sh
-cat /home/user/import/mail.properties
-```
+* Contents of the file `/home/user/import/mail.properties`
 
-```ls
-enabled=true
-server_name=ATSD-sandbox
-server=mail.example.org
-port=587
-sender=myuser@example.org
-user=myuser@example.org
-password=secret
-auth=true
-ssl=true
-upgrade_ssl=true
-```
+  ```ls
+  server=mail.example.org
+  user=myuser@example.org
+  password=********
+  ```
 
-```sh
-docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
-  --name=atsd-sandbox \
-  --volume /home/user/import:/import \
-  --env EMAIL_CONFIG=mail.properties \
-  axibase/atsd-sandbox:latest
-```
+* Container `run` command
+
+  ```sh
+  docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+    --name=atsd-sandbox \
+    --volume /home/user/import:/import \
+    --env EMAIL_CONFIG=mail.properties \
+    axibase/atsd-sandbox:latest
+  ```
+
+* Delivered test message
+
+  ![E-Mail Screenshot](resources/email_message.png)
+
+* Start log message if no errors occured and test was successful
+
+  ```
+  [ATSD] Mail Client test successful.
+  ```
+
+  Start log message on incomplete configuration
+
+  ```
+  [ATSD] Error: empty user mail configuration field. Mail client won't be enabled.
+  ```
+
+  Start log message when test fails
+
+  ```
+  [ATSD] Mail Client test failed: Invalid email address
+  ```
 
 ### Job Configuration Parameters
 
