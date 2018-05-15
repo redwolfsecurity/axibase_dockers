@@ -283,17 +283,17 @@ Supported configuration parameters.
 |----------|-------------|---------------|
 | `enable` | Enable E-Mail notifications | `on` |
 | `server_name` | Server specified in the "From" field, for example `My ATSD Server` | `Axibase TSD` |
-| `server` | Hostname or IP address of your mail server, for example smtp.example.com | - |
-| `port` | Mail server port | - |
+| `server` | **Required** Hostname or IP address of your mail server, for example smtp.example.com | - |
+| `port` | Mail server port | 587 |
 | `sender` | Address specified in the "From" field, for example notify@example.com | Copied from `user` property |
-| `user` | Username of the mailbox user | - |
+| `user` | **Required** Username of the mailbox user | - |
 | `password` | Password of the mailbox user | - |
 | `header` | HTML text to add before message body | - |
 | `footer` | HTML text to add after message body | - |
 | `auth` | Enable authentication | Set to `on` if `password` specified |
 | `ssl` | Enable SSL encryption | `on` |
 | `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
-| `test_email` | E-Mail address to send test message on first start | - |
+| `test_email` | E-Mail address to send test message on first start | Copied from `sender` property |
 
 These parameters can be set to `on`/`off` or `true`/`false`: `enable`, `auth`, `ssl`, `upgrade_ssl`.
 

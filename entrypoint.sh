@@ -92,9 +92,8 @@ function xml_escape {
 }
 
 function xml_unescape {
-    local str_to_escape=$1
     # Unescape & < > ' " symbols
-    echo "$str_to_escape" | sed "s/\&amp;/\&/g;s/\&lt;/</g;s/\&gt;/>/g;s/\&apos;/'/g;s/\&quot;/\"/g"
+    sed "s/\&amp;/\&/g;s/\&lt;/</g;s/\&gt;/>/g;s/\&apos;/'/g;s/\&quot;/\"/g"
 }
 
 function sed_escape {
@@ -410,6 +409,45 @@ function prepare_import {
         fi
     }
 
+    function configure_email_fields {
+        resolve_file "$EMAIL_CONFIG"
+        local email_config_file="$import_path"
+        set_email_form_field update Update
+        set_email_form_field enabled on
+        set_email_form_field ssl on
+        set_email_form_field startTls on
+        if [ -n "$SERVER_URL" ]; then
+            set_email_form_field serverName "$SERVER_URL"
+        else
+            set_email_form_field serverName "Axibase TSD"
+        fi
+        set_email_form_field port 587
+        configure_from_file configure_email_field "" "" "$email_config_file"
+        if [ -z ${email_form["senderAddress"]} ]; then
+            set_email_form_field "senderAddress" ${email_form["user"]}
+        fi
+        if [ -n ${email_form["password"]} ] && [ -z ${email_form["authentication"]} ]; then
+            set_email_form_field "authentication" on
+        fi
+        if [ -z "$test_email" ]; then
+            test_email=${email_form["senderAddress"]}
+        fi
+
+        complete_email_form=true
+
+        if [ -z ${email_form["serverHost"]} ]; then
+            echo "[ATSD] Error: empty server mail configuration field. Mail client won't be enabled."
+            complete_email_form=false
+        fi
+        if [ -z ${email_form["user"]} ]; then
+            echo "[ATSD] Error: empty user mail configuration field. Mail client won't be enabled."
+            complete_email_form=false
+        fi
+        if [ -z ${email_form["password"]} ]; then
+            echo "[ATSD] Warning: empty password mail configuration field. Mail configuration may be incomplete."
+        fi
+    }
+
     if [ -f "$FIRST_START_MARKER" ]; then
         check_server_url
 
@@ -423,20 +461,7 @@ function prepare_import {
             update_import_configs
         fi
         if [ -n "$EMAIL_CONFIG" ]; then
-            resolve_file "$EMAIL_CONFIG"
-            local email_config_file="$import_path"
-            set_email_form_field update Update
-            set_email_form_field enabled on
-            set_email_form_field ssl on
-            set_email_form_field startTls on
-            set_email_form_field serverName "Axibase TSD"
-            configure_from_file configure_email_field "" "" "$email_config_file"
-            if [ -z ${email_form["senderAddress"]} ]; then
-                set_email_form_field "senderAddress" ${email_form["user"]}
-            fi
-            if [ -n ${email_form["password"]} ] && [ -z ${email_form["authentication"]} ]; then
-                set_email_form_field "authentication" on
-            fi
+            configure_email_fields
         fi
         if [ -n "$TELEGRAM_CONFIG" ]; then
             resolve_file "$TELEGRAM_CONFIG"
@@ -585,7 +610,7 @@ function start_atsd {
     }
 
     function configure_email {
-        if [ -n "$EMAIL_CONFIG" ]; then
+        if [ -n "$EMAIL_CONFIG" ] && [[ "$complete_email_form" == true ]]; then
             declare -a curl_data_arg
 
             for key in ${!email_form[@]}; do
@@ -596,18 +621,26 @@ function start_atsd {
             if curl -i -s -u "axibase:axibase" "${curl_data_arg[@]}" \
                 http://127.0.0.1:8088/admin/mailclient | \
                 contains "$HTTP_OK_CODE"; then
-                echo "[ATSD] Mail Client configured"
+                echo "[ATSD] Mail Client configured."
             else
-                echo "[ATSD] WARNING: Failed to configure mail client"
+                echo "[ATSD] Failed to configure mail client."
             fi
 
             if [ -n "$test_email" ]; then
-                local test_subject="Email configuration test from ATSD at ${SERVER_URL}"
-                curl -i -s -u "axibase:axibase" \
+                local display_url="$SERVER_URL"
+                if [ -z "$display_url" ]; then
+                    display_url="https://${HOSTNAME}:8443"
+                fi
+                local test_subject="Email configuration test from ATSD at ${display_url}"
+                local test_response=$(curl -i -s -u "axibase:axibase" \
                     --data-urlencode "send=Send" \
                     --data-urlencode "subject=${test_subject}" \
                     --data-urlencode "email=${test_email}" \
-                    http://127.0.0.1:8088/admin/mailclient > /dev/null
+                    http://127.0.0.1:8088/admin/mailclient |& cat)
+                local err_message=$(echo "$test_response" | html_extract_text 'span style="color:red"' | xml_unescape)
+                if [ -n "$err_message" ]; then
+                    echo "[ATSD] Mail Client test failed: $err_message"
+                fi
             fi
         fi
     }
@@ -667,7 +700,7 @@ function start_atsd {
                 echo "[ATSD]   Error: $error"
             else
                 echo "[ATSD]   Telegram Web Notification test "
-                local msg_response=$(xml_unescape $(echo "$response" | html_extract_text 'textarea id="msg-response-body"'))
+                local msg_response=$(echo "$response" | html_extract_text 'textarea id="msg-response-body"' | xml_unescape )
                 if echo "$msg_response" | grep -q '"ok":false'; then
                     echo "failed."
                     echo "[ATSD]   Error: $msg_response"
@@ -714,7 +747,7 @@ function start_atsd {
                 echo "[ATSD]   Error: $error"
             else
                 echo -n "[ATSD]   Slack Web Notification test "
-                local msg_response=$(xml_unescape $(echo "$response" | html_extract_text 'textarea id="msg-response-body"'))
+                local msg_response=$(echo "$response" | html_extract_text 'textarea id="msg-response-body"' | xml_unescape)
                 if echo "$msg_response" | grep -q '"ok":false'; then
                     echo "failed."
                     echo "[ATSD]   Error: $msg_response"
