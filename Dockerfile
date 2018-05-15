@@ -19,7 +19,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A5796
   && adduser --disabled-password --quiet --gecos "" axibase \
   && echo "deb [arch=amd64] https://axibase.com/public/repository/deb/ ./" >> /etc/apt/sources.list \
   && apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y atsd wget unzip cron nano iproute2 file \
+  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y atsd wget unzip cron nano \
+        iproute2 file python3 python3-pip python3-setuptools \
+  && pip3 install --upgrade pip && pip install atsd_client \
   && rm -rf /var/lib/apt/lists/* \
   && sed -i '/.*hbase.cluster.distributed.*/{n;s/.*/   <value>false<\/value>/}' /opt/atsd/hbase/conf/hbase-site.xml \
   && sed -i 's/\(max_tries_count=\).\+/\130/' /opt/atsd/bin/atsd-hbase.sh \
