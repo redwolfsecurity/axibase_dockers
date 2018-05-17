@@ -1,6 +1,6 @@
 FROM centos:6
 MAINTAINER ATSD Developers <dev-atsd@axibase.com>
-ENV version 5.7.2
+ENV version 5.8.0
 #metadata
 LABEL com.axibase.vendor="Axibase Corporation" \
       com.axibase.product="Collectd with write_atsd plugin builder"

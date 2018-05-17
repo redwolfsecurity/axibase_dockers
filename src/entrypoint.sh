@@ -92,7 +92,6 @@ arch=`uname -m`
 
 git clone https://github.com/axibase/atsd-collectd-plugin.git
 cd atsd-collectd-plugin/
-git apply -v /buildfiles/write_kafka.patch
 
 case ${PACKAGE_TYPE} in
     debian)
