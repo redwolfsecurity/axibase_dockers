@@ -253,8 +253,8 @@
 
 Summary:	Statistics collection and monitoring daemon
 Name:		collectd
-Version:	5.7.2
-Release:	7%{?dist}
+Version:	5.8.0
+Release:	1%{?dist}
 URL:		http://collectd.org
 Source:		http://collectd.org/files/%{name}-%{version}.tar.bz2
 #Source:		https://github.com/axibase/atsd-collectd-plugin/archive/5.7.2-atsd-binary.tar.gz

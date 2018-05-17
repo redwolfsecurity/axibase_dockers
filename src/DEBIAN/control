@@ -1,5 +1,5 @@
 package: collectd-axibase
-Version: 5.7.2
+Version: 5.8.0
 Section: utils
 Architecture: amd64
 Maintainer: Axibase developers <dev@axibase.com> 

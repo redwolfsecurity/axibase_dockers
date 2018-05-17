@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd $(readlink -f $0)
+cd $(dirname $(readlink -f $0))
 
 echo "Creating build images"
 echo "====================="
