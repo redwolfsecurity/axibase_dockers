@@ -8,10 +8,10 @@ LABEL com.axibase.maintainer="ATSD Developers" \
   com.axibase.code="ATSD" \
   com.axibase.revision="${version}"
 
-# add entry point and image cleanup script
+# add entrypoint and image cleanup script
 COPY entry*.sh /  
 
-# install and configure
+# install and configure pseudo-cluster
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys 26AEE425A57967CFB323846008796A6514F3CB79 \
   && apt-get update \
   && LANG=C DEBIAN_FRONTEND=noninteractive apt-get install -y locales apt-utils apt-transport-https \
