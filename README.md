@@ -11,22 +11,29 @@ The collector instance will automatically initiate the [Docker](https://github.c
 * [Axibase Time Series Database](https://github.com/axibase/atsd)
 * [Axibase Collector](https://github.com/axibase/axibase-collector)
 * [collectd](https://github.com/axibase/atsd/tree/master/integration/collectd)
+* Python, version `3`
+* [ATSD API Python Client](https://github.com/axibase/atsd-api-python)
 
 ## Launch Container
 
 ```sh
-docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
-  --name=atsd-sandbox \
-  --volume /var/run/docker.sock:/var/run/docker.sock \
-  axibase/atsd-sandbox:latest
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 axibase/atsd-sandbox:latest
 ```
 
-> Mounting `/var/run/docker.sock` is necessary for the sandbox to collect performance statistics from the Docker host. Remove the `--volume` option if this is not needed.
-
-Watch the container start log for `All applications started` message.
+Watch the start log for the **All applications started** message.
 
 ```sh
 docker logs -f atsd-sandbox
+```
+
+### Docker Statistics
+
+To collect container statistics from the Docker host, start the container with mounted `/var/run/docker.sock`.
+
+```sh
+docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  axibase/atsd-sandbox:latest
 ```
 
 ## Exposed Ports
