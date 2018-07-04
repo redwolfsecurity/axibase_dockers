@@ -2,16 +2,17 @@
 
 ## Overview
 
-Axibase Time Series Database is a specialized database for storing and analyzing time series data at scale.
+Axibase Time Series Database (ATSD) is a specialized database for storing and analyzing time series data.
 
-ATSD provides the following advantanges for application developers and data scientists:
+ATSD provides the following tools for application developers and data scientists:
 
-- Network API, CSV parsers, Storage Drivers, and Axibase Collector to consolidate timestamped data.
-- Data API and API clients for integration with custom Java, Go, Ruby, Python, NodeJS applications and R scripts.
-- Meta API and extended data types (Properties, Messages) to model the application's domain and industry-specific relationships.
-- SQL support with powerful time-series extensions for scheduled and ad-hoc reporting.
-- Built-in visualization library with 15 widgets optimized for building real-time dashboards.
-- Integrated rule engine with support for analytical rules and anomaly detection based on ARIMA and Holt-Winters forecasts.
+- Network API, CSV parsers, Storage Drivers, and Axibase Collector to collect time-series data.
+- Rest API and API clients for integration with Python, Java, Go, Ruby, NodeJS applications and R scripts.
+- SQL support with time-series extensions for scheduled and ad-hoc reporting.
+- Built-in declarative visualization library with 15 time-series widgets.
+- Rule engine with support for analytical rules and anomaly detection based on ARIMA and Holt-Winters forecasts.
+
+Refer to [ATSD Documentation](https://axibase.com/docs/atsd/) for additional details.
 
 ## Image Summary
 
@@ -35,13 +36,11 @@ docker run \
 
 ## Check Installation
 
+Watch for **ATSD start completed** message at the end of the `start.log` file.
+
 ```
 docker logs -f atsd
 ```
-
-It may take up to 5 minutes to initialize the database.
-
-You should see 'start completed' message at the end of the `start.log` file.
 
 ```
 [ATSD] Starting ATSD ...
@@ -55,7 +54,7 @@ You should see 'start completed' message at the end of the `start.log` file.
 [ATSD] ATSD start completed.
 ```
 
-The web interface is accessible on port 8088/http and 8443/https.
+The user interface is accessible on port `8443`/https.
 
 ## Launch Parameters
 
@@ -73,16 +72,16 @@ The web interface is accessible on port 8088/http and 8443/https.
 | **Name** | **Required** | **Description** |
 |:---|:---|:---|
 |`ADMIN_USER_NAME` | No | User name for the built-in administrator account. |
-|`ADMIN_USER_PASSWORD` | No | [Password](https://github.com/axibase/atsd-docs/blob/master/administration/user-authentication.md#password-requirements) for the built-in administrator.|
-|`COLLECTOR_USER_NAME` | No | User name for a data collector account. |
-|`COLLECTOR_USER_PASSWORD` | No | [Password](https://github.com/axibase/atsd-docs/blob/master/administration/user-authentication.md#password-requirements) for a data collector account.|
+|`ADMIN_USER_PASSWORD` | No | [Password](https://axibase.com/docs/atsd/administration/user-authentication.html#password-requirements) for the built-in administrator.|
+|`COLLECTOR_USER_NAME` | No | User name for a data [collector account](https://axibase.com/docs/atsd/administration/collector-account.html). |
+|`COLLECTOR_USER_PASSWORD` | No | [Password](https://axibase.com/docs/atsd/administration/user-authentication.html#password-requirements) for a data collector account.|
 |`COLLECTOR_USER_TYPE` | No | User group for a data collector account, default value is `writer`.|
-|`DB_TIMEZONE` | No | Database [timezone identifier](https://github.com/axibase/atsd/blob/master/api/network/timezone-list.md).|
+|`DB_TIMEZONE` | No | Database [timezone identifier](https://axibase.com/docs/atsd/administration/timezone.html).|
 |`JAVA_OPTS` | No | Additional arguments to be passed to ATSD JVM process. |
 |`HADOOP_OPTS` | No | Additional arguments to be passed to Hadoop/HDFS JVM processes. |
 |`HBASE_OPTS` | No | Additional arguments to be passed to HBase JVM processes. |
 
-View additional launch examples [here](https://github.com/axibase/atsd/blob/master/installation/docker.md#start-container).
+View additional launch examples [here](https://axibase.com/docs/atsd/installation/docker.html).
 
 ## Exposed Ports
 
@@ -90,21 +89,20 @@ View additional launch examples [here](https://github.com/axibase/atsd/blob/mast
 |:---|:---|:---|
 | 8088 | http | API, user interface. |
 | 8443 | https | API, user interface (secure). |
-| 8081 | tcp | Incoming [network commands](https://github.com/axibase/atsd-docs/tree/master/api/network#network-api). |
-| 8082 | udp | Incoming [network commands](https://github.com/axibase/atsd-docs/tree/master/api/network#udp-datagrams). |
+| 8081 | tcp | Incoming [network commands](https://axibase.com/docs/atsd/api/network/#connection). |
+| 8082 | udp | Incoming [network commands](https://axibase.com/docs/atsd/api/network/#udp-datagrams). |
 | 8084 | tcp | Incoming Graphite commands in Python pickle format. |
 | 1099 | tcp | JMX |
 
-
 ## Troubleshooting
 
-* Review [Troubleshooting Guide](https://github.com/axibase/atsd-docs/blob/master/installation/troubleshooting.md).
+* Review [Troubleshooting Guide](https://axibase.com/docs/atsd/installation/troubleshooting.html).
 
 ## Validation
 
-* [Verify database installation](https://github.com/axibase/atsd-docs/blob/master/installation/verifying-installation.md).
+* [Verify installation](https://axibase.com/docs/atsd/installation/verifying-installation.html).
 
 ## Post-installation Steps
 
-* [Basic configuration](https://github.com/axibase/atsd-docs/blob/master/installation/post-installation.md).
-* [Getting Started guide](https://github.com/axibase/atsd-docs/blob/master/tutorials/getting-started.md).
+* [Basic configuration](https://axibase.com/docs/atsd/installation/post-installation.html).
+* [Getting Started guide](hhttps://axibase.com/docs/atsd/tutorials/getting-started.html).
