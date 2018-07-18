@@ -46,6 +46,7 @@ rm -rf ./hbase/logs/*
 rm -rf ./hadoop/logs/*
 rm -rf ./hbase/zookeeper
 rm -rf ./hdfs-cache
+rm -rf /tmp/atsd
 
 echo "Move install files to ./install directory"
 
