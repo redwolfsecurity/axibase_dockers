@@ -66,7 +66,7 @@ Open the user account page in ATSD by clicking on the account icon in the upper-
 | `ATSD_IMPORT_PATH` | Comma-separated paths to files imported into **ATSD**. Path can refer to a file on the mounted file system or to a URL from which the file is downloaded. |
 | `COLLECTOR_IMPORT_PATH` | Comma-separated paths to files imported into **Collector**. Path can refer to a file on the mounted file system or to a URL from which the file is downloaded. |
 | `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before import. |
-| `SERVER_URL` | URL at which ATSD is accessible, includes schema, hostname, and port, for example: `https://atsd.example.org:8443`. |
+| `SERVER_URL` | URL at which ATSD is accessible. The URL must include schema, hostname, and port, for example: `https://atsd.example.org:8443`. |
 | `WEBHOOK` | List of incoming webhook templates to be initialized. |
 | `SLACK_TOKEN` | Slack bot authentication token. |
 | `SLACK_CHANNELS` | Slack channels.|
