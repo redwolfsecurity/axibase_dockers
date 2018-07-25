@@ -1,8 +1,12 @@
-# Overview
+# ATSD Sandbox Docker Image
 
-The image contains [Axibase Time Series Database](https://axibase.com/docs/atsd/), [Axibase Collector](https://axibase.com/docs/axibase-collector/), and companion tools. 
+![](./images/axibase-and-docker.png)
 
-The Collector instance is pre-configured to send data into the local ATSD instance.
+## Overview
+
+The ATSD Sandbox Docker Image contains [Axibase Time Series Database](https://axibase.com/docs/atsd/), [Axibase Collector](https://axibase.com/docs/axibase-collector/), and companion tools.
+
+Collector is pre-configured to send data into the local ATSD instance.
 
 ## Image Contents
 
@@ -12,13 +16,15 @@ The Collector instance is pre-configured to send data into the local ATSD instan
 * Python, version `3`
 * [ATSD API Python Client](https://github.com/axibase/atsd-api-python)
 
-## Launch Container
+## Launch Instructions
+
+### Run Container
 
 ```sh
 docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 axibase/atsd-sandbox:latest
 ```
 
-Watch the start log for the **All applications started** message.
+Watch the start log for the `All applications started` message.
 
 ```sh
 docker logs -f atsd-sandbox
@@ -28,7 +34,7 @@ docker logs -f atsd-sandbox
 
 To collect container statistics from the Docker host, start the container with mounted `/var/run/docker.sock`.
 
-The Collector automatically starts the [Docker](https://axibase.com/docs/axibase-collector/jobs/docker.html) job if the `docker run` command mounts `docker.sock` into the container.
+The Collector automatically starts the [Docker Job](https://axibase.com/docs/axibase-collector/jobs/docker.html) if the `docker run` command mounts `docker.sock` into the container.
 
 ```sh
 docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
@@ -36,15 +42,15 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
   axibase/atsd-sandbox:latest
 ```
 
-## Exposed Ports
+### Exposed Ports
 
-* Port 8443: ATSD web interface at `https://docker_host:8443/`
-* Port 9443: Axibase Collector web interface at `https://docker_host:9443/`.
-* Port 8081: ATSD [network commands](https://axibase.com/docs/atsd/api/network/#supported-commands) receiver.
+* Port `8443`: ATSD web interface at `https://docker_host:8443/`
+* Port `9443`: Axibase Collector web interface at `https://docker_host:9443/`.
+* Port `8081`: ATSD [network commands](https://axibase.com/docs/atsd/api/network/#supported-commands) receiver.
 
-## Default Credentials
+### Default Credentials
 
-The default user credentials are as follows:
+Default user credentials are shown below:
 
 * Username `axibase`
 * Password `axibase`
@@ -59,8 +65,8 @@ Open the user account page in ATSD by clicking on the account icon in the upper-
 |------------------|-------------|
 | `ATSD_IMPORT_PATH` | Comma-separated paths to files imported into **ATSD**. Path can refer to a file on the mounted file system or to a URL from which the file is downloaded. |
 | `COLLECTOR_IMPORT_PATH` | Comma-separated paths to files imported into **Collector**. Path can refer to a file on the mounted file system or to a URL from which the file is downloaded. |
-| `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before the import. |
-| `SERVER_URL` | URL at which ATSD will be accessible, including schema, hostname, and port, for example: `https://atsd.example.org:8443`. |
+| `COLLECTOR_CONFIG` | Specifies parameters to be replaced in Collector configuration files before import. |
+| `SERVER_URL` | URL at which ATSD is accessible. The URL must include schema, hostname, and port, for example: `https://atsd.example.org:8443`. |
 | `WEBHOOK` | List of incoming webhook templates to be initialized. |
 | `SLACK_TOKEN` | Slack bot authentication token. |
 | `SLACK_CHANNELS` | Slack channels.|
@@ -76,6 +82,7 @@ Open the user account page in ATSD by clicking on the account icon in the upper-
 This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLECTOR_CONFIG` and `EMAIL_CONFIG` variables
 
 1. **URL address** of the file:
+
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -84,8 +91,10 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
      --env COLLECTOR_IMPORT_PATH='https://example.org/marathon-jobs.xml' \
      axibase/atsd-sandbox:latest
    ```
+
 2. **Absolute path** on the container file system to the file:
-   ```sh
+
+    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
      --volume /var/run/docker.sock:/var/run/docker.sock \
@@ -94,8 +103,10 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
      --env ATSD_IMPORT_PATH='/atsd-marathon-xml.zip' \
      --env COLLECTOR_IMPORT_PATH='/marathon-jobs.xml' \
      axibase/atsd-sandbox:latest
-   ```
-3. **Relative path** to the file. In this case the file should be placed in the `/import` directory on the container file system.
+    ```
+
+3. **Relative path** to the file. In this case the file is in the `/import` directory on the container file system.
+
     ```sh
     mkdir /home/user/import
     cp atsd-marathon-xml.zip /home/user/import
@@ -107,21 +118,21 @@ This path format is used in `ATSD_IMPORT_PATH`, `COLLECTOR_IMPORT_PATH`, `COLLEC
       --env ATSD_IMPORT_PATH='atsd-marathon-xml.zip' \
       --env COLLECTOR_IMPORT_PATH='marathon-jobs.xml' \
       axibase/atsd-sandbox:latest
-   ```
+    ```
 
-> Note: files or directories mounted into the container, i.e. `--volume /home/user/import:/import`, should not be removed or renamed between container restarts.
+> Note: files or directories mounted into the container, for example `--volume /home/user/import:/import`, cannot be removed or renamed between container restarts.
 
 ### Configuration File Import
 
 #### Import Parameters
 
-`ATSD_IMPORT_PATH` and `COLLECTOR_IMPORT_PATH` variables must be specified using the following format: `path_1,path_2,...,path_N` where each path can refer to either an XML file or zip/tar.gz archive. See [path formats](#path-formats).
+`ATSD_IMPORT_PATH` and `COLLECTOR_IMPORT_PATH` variables must be specified using the following format: `path_1,path_2,...,path_N` where each path can refer to either an XML file or `zip`/`tar.gz` archive. See [Path Formats](#path-formats).
 
 #### Variable Substitution
 
-Environment variable substitution is performed in each of the imported files. Placeholders should have `${ENV.NAME}` format, where `NAME` is the name of the environment variable.
+Environment variable substitution is performed in each of the imported files. Placeholders must be identified with `${ENV.NAME}` format, where `NAME` is the name of the environment variable.
 
-For example, the launch command declares a variable `NAMESPACE` and the imported `jobs.xml` file contains a corresponding placeholder `${ENV.NAMESPACE}`.
+The launch command declares a variable `NAMESPACE` and the imported `jobs.xml` file contains a corresponding placeholder `${ENV.NAMESPACE}`.
 
 ```txt
  --env NAMESPACE=Axibase \
@@ -146,10 +157,9 @@ To ensure that the XML file remains valid after the variable substitution, wrap 
 
 If no corresponding environment variable is defined for a placeholder specified in the file, the placeholder remains unchanged.
 
-
 ### Server URL
 
-The `SERVER_URL` variable determines the URL, including the protocol, the DNS name and port, at which the database will be accessible.
+The `SERVER_URL` variable determines the URL, including the protocol, the DNS name and port, at which the database is accessible.
 
 Usage example:
 
@@ -165,13 +175,13 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
 
 The list of available templates:
 
-- `aws-cw`
-- `github`
-- `jenkins`
-- `slack`
-- `telegram`
+* `aws-cw`
+* `github`
+* `jenkins`
+* `slack`
+* `telegram`
 
-Usage example:
+**Example**:
 
 ```sh
 docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
@@ -181,7 +191,7 @@ docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
   axibase/atsd-sandbox:latest
 ```
 
-The generated URLs, including user credentials, are displayed in the start log:
+Generated URLs, including user credentials, are displayed in the start log:
 
 ```txt
 ...
@@ -203,7 +213,7 @@ The following environment variables configure outgoing webhooks for Slack and Te
 | `TELEGRAM_BOT_TOKEN` | **Required** Bot API token assigned by [@Botfather](https://telegram.me/BotFather) |
 | `TELEGRAM_CHAT_ID` | **Required** Unique identifier for the target chat. |
 
-Usage example:
+**Example**:
 
 ```sh
 docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081
@@ -216,7 +226,7 @@ Alternatively, configuration files can be used instead of environment variables.
 
 `SLACK_CONFIG` and `TELEGRAM_CONFIG` variables specify path to the files with configuration parameters for [Slack](https://axibase.com/docs/atsd/rule-engine/notifications/slack.html) and [Telegram](https://axibase.com/docs/atsd/rule-engine/notifications/telegram.html) respectively. File format is the same as for `EMAIL_CONFIG` variable.
 
-* Slack
+* Slack:
 
   Configuration properties for `SLACK_CONFIG`:
 
@@ -258,7 +268,7 @@ Alternatively, configuration files can be used instead of environment variables.
 
 #### Outgoing Webhook Tests
 
-The configured web notifications are tested on initial start by sending a test message. Test results are logged in the start log.
+Configured web notifications are tested on initial start by sending a test message. Test results are logged in the start log.
 
 * Successful test
 
@@ -291,11 +301,11 @@ Supported configuration parameters.
 
 | Property | Description | Default value |
 |----------|-------------|---------------|
-| `enable` | Enable E-Mail notifications | `on` |
-| `server_name` | Server specified in the "From" field, for example `My ATSD Server` | `Axibase TSD` |
-| `server` | **Required** Hostname or IP address of your mail server, for example smtp.example.org | - |
+| `enable` | Enable email notifications | `on` |
+| `server_name` | Server specified in the **From** field<br>For example: `My ATSD Server` | `Axibase TSD` |
+| `server` | **Required** Hostname or IP address of your mail server<br>For example: `smtp.example.org` | - |
 | `port` | Mail server port | `587` |
-| `sender` | Address specified in the "From" field, for example `test@example.org` | Copied from `user` property |
+| `sender` | Address specified in the **From** field<br>For example `test@example.org` | Copied from `user` property |
 | `user` | **Required** Username of the mailbox user | - |
 | `password` | Password of the mailbox user | - |
 | `header` | HTML text to add before message body | - |
@@ -303,9 +313,9 @@ Supported configuration parameters.
 | `auth` | Enable authentication | Set to `on` if `password` specified |
 | `ssl` | Enable SSL encryption | `on` |
 | `upgrade_ssl` | Upgrade an insecure connection to a secure connection using SSL/TLS | `on` |
-| `test_email` | E-Mail address to send test message on first start | Copied from `sender` property |
+| `test_email` | Email address to receive test message on initial start | Copied from `sender` property |
 
-These parameters can be set to `on`/`off` or `true`/`false`: `enable`, `auth`, `ssl`, `upgrade_ssl`.
+> These parameters can be set to `on`/`off` or `true`/`false`: `enable`, `auth`, `ssl`, `upgrade_ssl`.
 
 #### Usage example
 
@@ -331,33 +341,34 @@ These parameters can be set to `on`/`off` or `true`/`false`: `enable`, `auth`, `
 
   ![E-Mail Screenshot](resources/email_message.png)
 
-* Start log message if no errors occured and test was successful
+* Start log message if no errors occur and test is successful
 
-  ```
+  ```txt
   [ATSD] Mail Client test successful.
   ```
 
   Start log message on incomplete configuration
 
-  ```
+  ```txt
   [ATSD] Error: empty user mail configuration field. Mail client won't be enabled.
   ```
 
   Start log message when test fails
 
-  ```
+  ```txt
   [ATSD] Mail Client test failed: Invalid email address
   ```
 
 ### Job Configuration Parameters
 
-`COLLECTOR_CONFIG` is the semicolon-separated sequence of instructions to edit configuration files imported into Collector. 
+`COLLECTOR_CONFIG` is the semicolon-separated sequence of instructions to edit configuration files imported into Collector.
 
-Each instruction should be specified in the format `file_name.xml:/path/to/properties_file` or `file_name.xml:key1=value1,key2=value2` and causes the attributes in the XML file to be updated with new values prior to importing the file into Collector.
+Specify each instruction in the format `file_name.xml:/path/to/properties_file` or `file_name.xml:key1=value1,key2=value2`. This updates the attributes in the XML file with new values prior to importing the file into Collector.
 
 Instructions can be specified as follows:
 
 1. A path to a file on the container file system (see [path formats](#path-formats])), that contains `key=value` lines:
+
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -367,14 +378,18 @@ Instructions can be specified as follows:
      --env COLLECTOR_CONFIG="job_aws_aws-route53.xml:/aws.conf" \
    axibase/atsd-sandbox:latest
    ```
+
    ```sh
    cat /home/user/aws.conf
    ```
+
    ```ls
    accessKeyId=key
    secretAccessKey=secret
    ```
+
 2. A key-value pair in `key=value` format:
+
    ```sh
    docker run -d -p 8443:8443 -p 9443:9443 -p 8081:8081 \
      --name=atsd-sandbox \
@@ -385,20 +400,23 @@ Instructions can be specified as follows:
      axibase/atsd-sandbox:latest
    ```
 
-The XML file update involves replacements of XML tag values, identified with `key`, with new values, for example:
+XML file update replaces of XML tag values, identified as `key`, with new values:
 
 ```sh
 --env COLLECTOR_CONFIG='marathon-jobs.xml:server=mar1.example.com,userName=netops,password=1234456'
 ```
 
-- Before
+**Before**:
+
   ```xml
   <server>marathon_hostname</server>
   <port>8080</port>
   <userName>axibase</userName>
   <password></password>
   ```
-- After
+
+**After**:
+
   ```xml
   <server>mar1.example.com</server>
   <port>8080</port>
@@ -410,7 +428,7 @@ The XML file update involves replacements of XML tag values, identified with `ke
 
 `START_COLLECTOR` variable enables or disables Collector start.
 
-* `on` and `true` values enable start (default).
+* `on` and `true` values enable start, and are set by default.
 * `off` and `false` disable start.
 
 ```sh
@@ -421,23 +439,23 @@ This setting applies to the first and all subsequent container starts.
 
 ### Parameters Syntax
 
-The variables must not contain whitespace characters.
+Variables cannot contain whitespace characters.
 
-Semicolons and commas in file names, URLs, key and values must be escaped by `\` character as specified below:
+Escape semicolons and commas in file names, URLs, key and values via backslash `\` per specifications below:
 
 | Variable | Escaping |
 |----------|----------|
-| `ATSD_IMPORT_PATH` | Only `,` must be escaped. Do not escape `;` |
-| `COLLECTOR_IMPORT_PATH` | Only `,` must be escaped. Do not escape `;` |
-| `COLLECTOR_CONFIG` | Both `,` and `;` must be escaped |
+| `ATSD_IMPORT_PATH` | Only `,` must be escaped.<br>**Do not** escape `;` |
+| `COLLECTOR_IMPORT_PATH` | Only `,` must be escaped.<br>**Do not** escape `;` |
+| `COLLECTOR_CONFIG` | **Both** `,` and `;` must be escaped |
 
 Variables `WEBHOOK`, `SERVER_URL`, `EMAIL_CONFIG` do not require special escaping for `,` and `;`.
 
-```
+```sh
 --env COLLECTOR_CONFIG='config.xml:password=password\,with\;separators'
 ```
 
-Additional escaping might be required depending on the shell type and version.
+Some consoles require additional character escape based on type and version.
 
 ## Build Sandbox Manually
 
@@ -479,4 +497,4 @@ ls -lah *gz
 -rw-------  1 axibase  axibase   742M Jul  1 13:52 atsd-sandbox.tar.gz
 ```
 
-Pre-built image is available at [axibase.com](https://axibase.com/public/atsd-sandbox.tar.gz)
+Pre-built image is available at [`axibase.com`](https://axibase.com/public/atsd-sandbox.tar.gz).
