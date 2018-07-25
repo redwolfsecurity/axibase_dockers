@@ -1,10 +1,10 @@
-# Official ATSD Docker Image
+# ATSD Sandbox Docker Image
 
 ![](./images/axibase-and-docker.png)
 
 ## Overview
 
-The ATSD Docker Image contains [Axibase Time Series Database](https://axibase.com/docs/atsd/), [Axibase Collector](https://axibase.com/docs/axibase-collector/), and companion tools.
+The ATSD Sandbox Docker Image contains [Axibase Time Series Database](https://axibase.com/docs/atsd/), [Axibase Collector](https://axibase.com/docs/axibase-collector/), and companion tools.
 
 Collector is pre-configured to send data into the local ATSD instance.
 
